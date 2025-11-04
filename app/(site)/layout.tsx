@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-// Root layout: keep minimal to allow route groups to define their own layouts
+import "../globals.css";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { currentUser } from "@/lib/utils";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,16 +21,14 @@ export const metadata: Metadata = {
   keywords: "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计",
 };
 
-export default function RootLayout({
+export default function SiteLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
-        {children}
-      </body>
-    </html>
+    <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
+      <Header currentUser={currentUser} />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
   );
 }
