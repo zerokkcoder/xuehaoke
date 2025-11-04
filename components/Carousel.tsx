@@ -52,7 +52,7 @@ export default function Carousel({ slides, autoPlay = true, interval = 5000 }: C
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
       >
         {slides.map((slide, index) => (
-          <div key={slide.id} className="w-full h-full flex-shrink-0 relative">
+          <div key={slide.id} className="w-full h-full shrink-0 relative">
             <Image
               src={slide.image}
               alt={slide.title}
