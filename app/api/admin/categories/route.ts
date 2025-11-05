@@ -1,19 +1,8 @@
 import { NextResponse } from 'next/server'
-import { getPool } from '@/lib/db'
 import jwt from 'jsonwebtoken'
+import prisma from '@/lib/prisma'
 
-async function ensureTable() {
-  const pool = await getPool()
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS categories (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(128) NOT NULL UNIQUE,
-      sort INT NOT NULL DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `)
-  return pool
-}
+// 使用 Prisma 管理分类
 
 function verifyAdmin(req: Request) {
   const cookieHeader = req.headers.get('cookie') || ''
@@ -31,8 +20,10 @@ function verifyAdmin(req: Request) {
 export async function GET(req: Request) {
   const admin = verifyAdmin(req)
   if (!admin) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-  const pool = await ensureTable()
-  const [rows] = await pool.query<any[]>(`SELECT id, name, sort, created_at FROM categories ORDER BY sort ASC, id DESC`)
+  const rows = await prisma.category.findMany({
+    orderBy: [{ sort: 'asc' }, { id: 'desc' }],
+    select: { id: true, name: true, sort: true, createdAt: true },
+  })
   return NextResponse.json({ success: true, data: rows })
 }
 
@@ -43,12 +34,10 @@ export async function POST(req: Request) {
   if (!name || String(name).trim() === '') {
     return NextResponse.json({ success: false, message: '名称不能为空' }, { status: 400 })
   }
-  const pool = await ensureTable()
   try {
     const sortNum = Number.isFinite(Number(sort)) ? Number(sort) : 0
-    const [result]: any = await pool.query(`INSERT INTO categories (name, sort) VALUES (?, ?)`, [String(name).trim(), sortNum])
-    const [rows] = await pool.query<any[]>(`SELECT id, name, sort, created_at FROM categories WHERE id = ?`, [result.insertId])
-    return NextResponse.json({ success: true, data: rows[0] })
+    const created = await prisma.category.create({ data: { name: String(name).trim(), sort: sortNum } })
+    return NextResponse.json({ success: true, data: created })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '创建失败' }, { status: 500 })
   }

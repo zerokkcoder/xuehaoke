@@ -1,31 +1,8 @@
 import { NextResponse } from 'next/server'
-import { getPool } from '@/lib/db'
 import jwt from 'jsonwebtoken'
+import prisma from '@/lib/prisma'
 
-async function ensureTables() {
-  const pool = await getPool()
-  // categories table
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS categories (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(128) NOT NULL UNIQUE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `)
-  // subcategories table
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS subcategories (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      category_id INT NOT NULL,
-      name VARCHAR(128) NOT NULL,
-      sort INT NOT NULL DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_cat (category_id),
-      CONSTRAINT fk_cat FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `)
-  return pool
-}
+// 使用 Prisma 管理子分类
 
 function verifyAdmin(req: Request) {
   const cookieHeader = req.headers.get('cookie') || ''
@@ -48,8 +25,7 @@ export async function GET(req: Request) {
   if (!categoryId) {
     return NextResponse.json({ success: false, message: '缺少 categoryId' }, { status: 400 })
   }
-  const pool = await ensureTables()
-  const [rows] = await pool.query<any[]>(`SELECT id, name, sort, created_at FROM subcategories WHERE category_id = ? ORDER BY sort ASC, id DESC`, [categoryId])
+  const rows = await prisma.subcategory.findMany({ where: { categoryId }, orderBy: [{ sort: 'asc' }, { id: 'desc' }], select: { id: true, name: true, sort: true, createdAt: true } })
   return NextResponse.json({ success: true, data: rows })
 }
 
@@ -60,12 +36,10 @@ export async function POST(req: Request) {
   if (!categoryId || !name || String(name).trim() === '') {
     return NextResponse.json({ success: false, message: '参数错误' }, { status: 400 })
   }
-  const pool = await ensureTables()
   try {
     const sortNum = Number.isFinite(Number(sort)) ? Number(sort) : 0
-    const [result]: any = await pool.query(`INSERT INTO subcategories (category_id, name, sort) VALUES (?, ?, ?)`, [Number(categoryId), String(name).trim(), sortNum])
-    const [rows] = await pool.query<any[]>(`SELECT id, name, sort, created_at FROM subcategories WHERE id = ?`, [result.insertId])
-    return NextResponse.json({ success: true, data: rows[0] })
+    const created = await prisma.subcategory.create({ data: { categoryId: Number(categoryId), name: String(name).trim(), sort: sortNum } })
+    return NextResponse.json({ success: true, data: created })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '创建失败' }, { status: 500 })
   }

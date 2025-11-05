@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getPool } from '@/lib/db'
 import jwt from 'jsonwebtoken'
+import prisma from '@/lib/prisma'
 
 function verifyAdmin(req: Request) {
   const cookieHeader = req.headers.get('cookie') || ''
@@ -27,14 +27,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (!Number.isFinite(idNum) || idNum <= 0) {
     return NextResponse.json({ success: false, message: '无效的子分类ID' }, { status: 400 })
   }
-  const pool = await getPool()
   try {
-    const [curRows] = await pool.query<any[]>(`SELECT sort FROM subcategories WHERE id = ?`, [idNum])
-    const currentSort = ((curRows as any[])[0]?.sort) ?? 0
-    const sortNum = Number.isFinite(Number(sort)) ? Number(sort) : currentSort
-    await pool.query(`UPDATE subcategories SET name = ?, sort = ? WHERE id = ?`, [String(name).trim(), sortNum, idNum])
-    const [rows] = await pool.query<any[]>(`SELECT id, name, sort, created_at FROM subcategories WHERE id = ?`, [idNum])
-    return NextResponse.json({ success: true, data: rows[0] })
+    const data: any = { name: String(name).trim() }
+    if (Number.isFinite(Number(sort))) data.sort = Number(sort)
+    const updated = await prisma.subcategory.update({ where: { id: idNum }, data })
+    return NextResponse.json({ success: true, data: updated })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '更新失败' }, { status: 500 })
   }
@@ -48,9 +45,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   if (!Number.isFinite(idNum) || idNum <= 0) {
     return NextResponse.json({ success: false, message: '无效的子分类ID' }, { status: 400 })
   }
-  const pool = await getPool()
   try {
-    await pool.query(`DELETE FROM subcategories WHERE id = ?`, [idNum])
+    await prisma.subcategory.delete({ where: { id: idNum } })
     return NextResponse.json({ success: true })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '删除失败' }, { status: 500 })

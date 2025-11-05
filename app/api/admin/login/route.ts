@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { getPool } from '@/lib/db'
 import jwt from 'jsonwebtoken'
+import prisma from '@/lib/prisma'
 
 export async function POST(req: Request) {
   try {
@@ -10,42 +10,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: '缺少用户名或密码' }, { status: 400 })
     }
 
-    const pool = await getPool()
-
-    // Ensure table exists
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS admin_users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(64) NOT NULL UNIQUE,
-        password_hash VARCHAR(255) NOT NULL,
-        role VARCHAR(32) NOT NULL DEFAULT 'admin',
-        status VARCHAR(16) NOT NULL DEFAULT 'active',
-        last_login_at TIMESTAMP NULL,
-        failed_attempts INT NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `)
-
     // Ensure default admin exists
-    const [rows] = await pool.query<any[]>(`SELECT id FROM admin_users WHERE username = ?`, ['admin'])
-    if (rows.length === 0) {
+    const exists = await prisma.adminUser.findUnique({ where: { username: 'admin' }, select: { id: true } })
+    if (!exists) {
       const hash = await bcrypt.hash('123456', 10)
-      await pool.query(`INSERT INTO admin_users (username, password_hash, role, status) VALUES (?, ?, 'superadmin', 'active')`, ['admin', hash])
+      await prisma.adminUser.create({ data: { username: 'admin', passwordHash: hash, role: 'superadmin', status: 'active' } })
     }
 
     // Verify provided credentials
-    const [userRows] = await pool.query<any[]>(`SELECT * FROM admin_users WHERE username = ? LIMIT 1`, [username])
-    if (userRows.length === 0) {
+    const user = await prisma.adminUser.findUnique({ where: { username } })
+    if (!user) {
       return NextResponse.json({ success: false, message: '账号不存在' }, { status: 401 })
     }
-    const user = userRows[0]
-    const ok = await bcrypt.compare(password, user.password_hash)
+    const ok = await bcrypt.compare(password, user.passwordHash)
     if (!ok) {
-      await pool.query(`UPDATE admin_users SET failed_attempts = failed_attempts + 1 WHERE id = ?`, [user.id])
+      await prisma.adminUser.update({ where: { id: user.id }, data: { failedAttempts: user.failedAttempts + 1 } })
       return NextResponse.json({ success: false, message: '密码错误' }, { status: 401 })
     }
-
-    await pool.query(`UPDATE admin_users SET last_login_at = NOW(), failed_attempts = 0 WHERE id = ?`, [user.id])
+    await prisma.adminUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date(), failedAttempts: 0 } })
 
     // Issue JWT and set HttpOnly cookie
     const secret = process.env.ADMIN_JWT_SECRET || 'dev_secret_change_me'
