@@ -9,30 +9,49 @@ interface HeaderProps {
     username: string
     isVip: boolean
   }
+  initialCategories?: NavCategory[]
 }
 
 type NavCategory = { id: number; name: string; subcategories: { id: number; name: string }[] }
 
-export default function Header({ currentUser }: HeaderProps) {
+export default function Header({ currentUser, initialCategories = [] }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const [navCategories, setNavCategories] = useState<NavCategory[]>([])
+  const [navCategories, setNavCategories] = useState<NavCategory[]>(initialCategories)
   const [openCategoryId, setOpenCategoryId] = useState<number | null>(null)
   const closeTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) return
+    const controller = new AbortController()
     const load = async () => {
       try {
-        const res = await fetch('/api/categories')
-        if (res.ok) {
-          const data = await res.json()
-          setNavCategories((data?.data || []).map((c: any) => ({ id: c.id, name: c.name, subcategories: (c.subcategories || []).map((s: any) => ({ id: s.id, name: s.name })) })))
+        const res = await fetch('/api/categories', { signal: controller.signal, keepalive: true, cache: 'no-store' })
+        if (!res.ok) return
+        let data: any = null
+        try { data = await res.json() } catch { return }
+        const incoming = Array.isArray(data?.data) ? data.data : []
+        const seenCat = new Set<number>()
+        const dedupCats: NavCategory[] = []
+        for (const c of incoming) {
+          if (seenCat.has(c.id)) continue
+          seenCat.add(c.id)
+          const seenSub = new Set<number>()
+          const subs = (c.subcategories || []).filter((s: any) => {
+            if (seenSub.has(s.id)) return false
+            seenSub.add(s.id)
+            return true
+          }).map((s: any) => ({ id: s.id, name: s.name }))
+          dedupCats.push({ id: c.id, name: c.name, subcategories: subs })
         }
-      } catch {
-        // ignore
+        setNavCategories(dedupCats)
+      } catch (err: any) {
+        // 如果是主动取消（页面切换/卸载），不记录错误
+        if (err?.name === 'AbortError') return
       }
     }
     load()
+    return () => controller.abort()
   }, [])
 
   return (

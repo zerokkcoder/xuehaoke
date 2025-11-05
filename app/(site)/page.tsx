@@ -4,23 +4,56 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import ResourceCard from '@/components/ResourceCard'
-import { resources } from '@/lib/utils'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid'
 
 export default function Home() {
-  const [displayedResources, setDisplayedResources] = useState(resources.slice(0, 6))
+  const [displayedResources, setDisplayedResources] = useState<{ id: number; coverImage: string; title: string; category: string }[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [size] = useState(6)
+  const [total, setTotal] = useState(0)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const lastPageRef = useRef(0)
 
-  const loadMoreResources = () => {
+  const loadMoreResources = async () => {
+    if (isLoading) return
     setIsLoading(true)
-    // Simulate loading more resources
-    setTimeout(() => {
-      const currentLength = displayedResources.length
-      const moreResources = resources.slice(currentLength, currentLength + 6)
-      setDisplayedResources([...displayedResources, ...moreResources])
+    try {
+      const requestedPage = page
+      // 防重复：若当前页与最近成功加载的页相同，跳过
+      if (requestedPage === lastPageRef.current) { setIsLoading(false); return }
+      const res = await fetch(`/api/resources?page=${requestedPage}&size=${size}`)
+      if (!res.ok) { setIsLoading(false); return }
+      let data: any = null
+      try { data = await res.json() } catch { setIsLoading(false); return }
+      const list = Array.isArray(data?.data) ? data.data : []
+      if (list.length === 0) { setIsLoading(false); return }
+      const next = list.map((r: any) => ({
+        id: r.id,
+        title: r.title,
+        coverImage: r.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&h=600&fit=crop',
+        category: r.subcategoryName || r.categoryName || '其他',
+      }))
+      setDisplayedResources(prev => {
+        const merged = [...prev, ...next]
+        const seen = new Set<any>()
+        const unique = merged.filter(item => {
+          const k = item.id
+          if (seen.has(k)) return false
+          seen.add(k)
+          return true
+        })
+        return unique
+      })
+      const pg = data?.pagination; if (pg) { setTotal(pg.total || 0) }
+      // 标记已成功加载的页，并推进下一页
+      lastPageRef.current = requestedPage
+      setPage(requestedPage + 1)
+    } catch {
+      // ignore fetch errors
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   // Auto load more when the sentinel enters viewport
@@ -31,7 +64,7 @@ export default function Home() {
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries
-        const hasMore = displayedResources.length < resources.length
+        const hasMore = displayedResources.length < total || total === 0
         if (entry.isIntersecting && hasMore && !isLoading) {
           loadMoreResources()
         }
@@ -41,7 +74,14 @@ export default function Home() {
 
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [displayedResources.length, isLoading])
+  }, [displayedResources.length, isLoading, page, total])
+
+  // 初始加载
+  useEffect(() => {
+    if (displayedResources.length === 0) {
+      loadMoreResources()
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">

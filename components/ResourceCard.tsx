@@ -2,10 +2,16 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Resource } from '@/lib/utils'
+
+type ResourceCardData = {
+  id: number | string
+  coverImage: string
+  title: string
+  category: string
+}
 
 interface ResourceCardProps {
-  resource: Resource
+  resource: ResourceCardData
   index?: number
 }
 
@@ -24,6 +30,7 @@ export default function ResourceCard({ resource, index = 0 }: ResourceCardProps)
               src={resource.coverImage}
               alt={resource.title}
               fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover"
             />
           </div>

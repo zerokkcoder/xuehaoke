@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import Header from "@/components/Header";
+import prisma from "@/lib/prisma";
 import Footer from "@/components/Footer";
 import { currentUser } from "@/lib/utils";
 
@@ -21,14 +22,22 @@ export const metadata: Metadata = {
   keywords: "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计",
 };
 
-export default function SiteLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default async function SiteLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const cats = await prisma.category.findMany({
+    orderBy: [{ sort: 'asc' }, { id: 'desc' }],
+    select: {
+      id: true,
+      name: true,
+      subcategories: { orderBy: [{ sort: 'asc' }, { id: 'asc' }], select: { id: true, name: true } },
+    },
+  })
+  const initialCategories = cats.map(c => ({ id: c.id, name: c.name, subcategories: c.subcategories.map(s => ({ id: s.id, name: s.name })) }))
+
   return (
     <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
-      <Header currentUser={currentUser} />
+      <Header currentUser={currentUser} initialCategories={initialCategories} />
       <main className="flex-1">{children}</main>
       <Footer />
     </div>
-  );
+  )
 }
