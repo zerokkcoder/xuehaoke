@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "../globals.css";
 import HeaderStatus from "./_components/HeaderStatus";
-import { HomeIcon, Squares2X2Icon, DocumentIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, TagIcon, UserIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, Squares2X2Icon, DocumentIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, TagIcon, UserIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
 export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -40,7 +40,7 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
       <div className="w-full mt-2 bg-card shadow-sm">
         <div className="flex min-h-0">
           <AsideMenu collapsed={collapsed} />
-          <main className="flex-1 px-4 py-4 bg-gray-50 overflow-y-auto">{children}</main>
+          <main className="h-screen flex-1 px-4 py-4 bg-gray-50 overflow-y-auto">{children}</main>
         </div>
       </div>
     </div>
@@ -55,6 +55,7 @@ function AsideMenu({ collapsed }: { collapsed: boolean }) {
     { href: "/admin/tags", label: "标签管理", Icon: TagIcon },
     { href: "/admin/resources", label: "资源管理", Icon: Squares2X2Icon },
     { href: "/admin/users", label: "用户管理", Icon: UserIcon },
+    { href: "/admin/plans", label: "会员计划", Icon: StarIcon },
   ] as const
 
   return (

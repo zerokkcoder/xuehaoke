@@ -117,3 +117,18 @@ model EmailVerification {
   createdAt  DateTime @default(now()) @map("created_at")
   @@map("email_verifications")
 }
+
+// Membership/VIP plans
+model MembershipPlan {
+  id             Int       @id @default(autoincrement())
+  name           String    @unique
+  price          Decimal   @default(0) @db.Decimal(10, 2)
+  durationDays   Int       @map("duration_days")
+  dailyDownloads Int       @map("daily_downloads")
+  isPopular      Boolean   @default(false) @map("is_popular")
+  features       Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("membership_plans")
+}
