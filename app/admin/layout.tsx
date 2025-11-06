@@ -38,9 +38,9 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
         </div>
       </header>
       <div className="w-full mt-2 bg-card shadow-sm">
-        <div className="flex">
+        <div className="flex min-h-0">
           <AsideMenu collapsed={collapsed} />
-          <main className="flex-1 h-screen px-4 py-4 bg-gray-50">{children}</main>
+          <main className="flex-1 px-4 py-4 bg-gray-50 overflow-y-auto">{children}</main>
         </div>
       </div>
     </div>
