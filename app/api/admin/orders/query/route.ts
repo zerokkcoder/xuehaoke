@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
   const outTradeNo = String(body?.outTradeNo || '')
   if (!outTradeNo) return NextResponse.json({ success: false, message: '缺少订单号' }, { status: 400 })
-  const alipay = getAlipay()
+  const alipay = await getAlipay()
   try {
     const res: any = await alipay.exec('alipay.trade.query', {
       biz_content: { out_trade_no: outTradeNo }

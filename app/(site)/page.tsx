@@ -162,6 +162,20 @@ export default function Home() {
   }
 
   const showSearchView = (searchParams.get('q') !== null)
+  const [siteConfig, setSiteConfig] = useState<{ heroImage?: string | null; siteSlogan?: string | null } | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      try {
+        const res = await fetch('/api/site/settings', { signal: controller.signal, cache: 'no-store' })
+        const json = await res.json().catch(() => ({}))
+        if (res.ok && json?.success) setSiteConfig(json.data)
+      } catch {}
+    }
+    load()
+    return () => controller.abort()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -170,7 +184,7 @@ export default function Home() {
         <section>
           <div className="relative w-full h-64 md:h-72 overflow-hidden rounded-lg border border-border bg-card">
             <Image
-              src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=1600&h=600&fit=crop"
+              src={siteConfig?.heroImage || "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=1600&h=600&fit=crop"}
               alt="Hero"
               fill
               className="object-cover"
@@ -181,7 +195,7 @@ export default function Home() {
               <div className="w-full text-white">
                 <div className="w-full animate-fadeIn flex flex-col items-center justify-center text-center">
                   <h1 className="text-3xl md:text-4xl font-bold mb-4">优课网，卷王必备的资源平台</h1>
-                  <p className="text-base md:text-lg mb-4 opacity-90">海量优质资源，快速检索，一键下载</p>
+                  <p className="text-base md:text-lg mb-4 opacity-90">{siteConfig?.siteSlogan || '海量优质资源，快速检索，一键下载'}</p>
                   <form onSubmit={handleSearchSubmit} className="flex items-center justify-center w-full max-w-md mx-auto bg-white rounded-full shadow">
                     <input
                       type="text"
@@ -205,7 +219,7 @@ export default function Home() {
         <section>
           <div className="relative w-full h-40 md:h-48 overflow-hidden rounded-lg border border-border bg-card">
             <Image
-              src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=1600&h=400&fit=crop"
+              src={siteConfig?.heroImage || "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=1600&h=400&fit=crop"}
               alt="Search Header"
               fill
               className="object-cover"

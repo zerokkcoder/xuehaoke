@@ -178,3 +178,28 @@ model Order {
 
   @@map("orders")
 }
+
+// Site settings for configurable values (e.g., Alipay keys, notify URL)
+model SiteSetting {
+  id               Int      @id @default(autoincrement())
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Alipay configurations
+  alipayAppId      String?  @map("alipay_app_id")
+  alipayPrivateKey String?  @db.Text @map("alipay_private_key")
+  alipayPublicKey  String?  @db.Text @map("alipay_public_key")
+  alipayGateway    String?  @map("alipay_gateway")
+  alipayNotifyUrl  String?  @map("alipay_notify_url")
+
+  // Site display configurations
+  siteName        String?  @map("site_name")
+  siteLogo        String?  @map("site_logo")
+  siteSlogan      String?  @map("site_slogan")
+  siteKeywords    String?  @db.Text @map("site_keywords")
+  siteDescription String?  @db.Text @map("site_description")
+  heroImage       String?  @map("hero_image")
+  footerText      String?  @db.Text @map("footer_text")
+
+  @@map("site_settings")
+}

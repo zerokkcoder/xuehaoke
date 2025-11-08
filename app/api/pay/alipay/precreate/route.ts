@@ -18,11 +18,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: '订单标题不能为空' }, { status: 400 })
     }
 
-    const alipay = getAlipay()
+    const alipay = await getAlipay()
     const res: any = await alipay.exec(
       'alipay.trade.precreate',
       {
-        notify_url: getNotifyUrl(),
+        notify_url: await getNotifyUrl(),
         biz_content: {
           out_trade_no,
           total_amount: total_amount.toFixed(2),

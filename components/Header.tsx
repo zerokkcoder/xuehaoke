@@ -11,17 +11,19 @@ interface HeaderProps {
     isVip: boolean
   }
   initialCategories?: NavCategory[]
+  initialSiteConfig?: { siteName?: string | null; siteLogo?: string | null } | null
 }
 
 type NavCategory = { id: number; name: string; subcategories: { id: number; name: string }[] }
 
-export default function Header({ currentUser, initialCategories = [] }: HeaderProps) {
+export default function Header({ currentUser, initialCategories = [], initialSiteConfig = null }: HeaderProps) {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [navCategories, setNavCategories] = useState<NavCategory[]>(initialCategories)
   const [openCategoryId, setOpenCategoryId] = useState<number | null>(null)
   const [siteUser, setSiteUser] = useState<{ username: string; isVip: boolean; avatarUrl?: string } | null>(currentUser ?? null)
+  const [siteConfig, setSiteConfig] = useState<{ siteName?: string | null; siteLogo?: string | null } | null>(initialSiteConfig)
   const closeTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -57,6 +59,21 @@ export default function Header({ currentUser, initialCategories = [] }: HeaderPr
     return () => controller.abort()
   }, [])
 
+  // Load public site settings (logo/name) if not provided from server
+  useEffect(() => {
+    if (initialSiteConfig) return
+    const controller = new AbortController()
+    const load = async () => {
+      try {
+        const res = await fetch('/api/site/settings', { signal: controller.signal, cache: 'no-store' })
+        const json = await res.json().catch(() => ({}))
+        if (res.ok && json?.success) setSiteConfig(json.data)
+      } catch {}
+    }
+    load()
+    return () => controller.abort()
+  }, [initialSiteConfig])
+
   // 前端保存的登录用户（localStorage）优先显示
   useEffect(() => {
     try {
@@ -90,10 +107,8 @@ export default function Header({ currentUser, initialCategories = [] }: HeaderPr
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 link">
-            <div className="w-7 h-7 rounded-md border border-border flex items-center justify-center">
-              <span className="text-sm font-semibold">库</span>
-            </div>
-            <span className="text-lg font-semibold">酷库下载</span>
+            <img src={siteConfig?.siteLogo || '/logo.png'} alt="logo" className="w-7 h-7 object-contain" />
+            <span className="text-lg font-semibold">{siteConfig?.siteName || '酷库下载'}</span>
           </Link>
 
           {/* Desktop Navigation */}

@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   const params = Object.fromEntries(new URLSearchParams(text))
   console.log('alipay notify params:', params)
   console.log('执行回调了')
-  const alipay = getAlipay()
+  const alipay = await getAlipay()
   const ok = alipay.checkNotifySign(params)
   if (!ok) return new Response('fail', { status: 400 })
 
