@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
 
   return (
     <div className="min-h-screen bg-background antialiased">
-      <header className="bg-card shadow-sm">
+      <header className="bg-card shadow-sm fixed top-0 left-0 right-0 z-50">
         <div className="w-full mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={siteConfig?.siteLogo || '/logo.png'} alt="logo" className="w-8 h-8 rounded object-contain" />
@@ -51,7 +51,7 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
           <HeaderStatus />
         </div>
       </header>
-      <div className="w-full mt-2 bg-card shadow-sm">
+      <div className="w-full pt-16">
         <div className="flex min-h-0">
           <AsideMenu collapsed={collapsed} />
           <main className="h-screen flex-1 px-4 py-4 bg-gray-50 overflow-y-auto">{children}</main>
