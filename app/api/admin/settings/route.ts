@@ -19,8 +19,27 @@ export async function GET(req: Request) {
   const admin = verifyAdmin(req)
   if (!admin) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
   const rows: any[] = await prisma.$queryRawUnsafe('SELECT * FROM site_settings LIMIT 1')
-  const setting = rows?.[0] || null
-  return NextResponse.json({ success: true, data: setting })
+  const r = rows?.[0]
+  if (!r) return NextResponse.json({ success: true, data: null })
+  const data = {
+    id: r.id ?? null,
+    // Alipay configs (camelCase for UI)
+    alipayAppId: r.alipay_app_id ?? null,
+    alipayPrivateKey: r.alipay_private_key ?? null,
+    alipayPublicKey: r.alipay_public_key ?? null,
+    alipayGateway: r.alipay_gateway ?? null,
+    alipayNotifyUrl: r.alipay_notify_url ?? null,
+    // Site display configs
+    siteName: r.site_name ?? null,
+    siteLogo: r.site_logo ?? null,
+    siteSlogan: r.site_slogan ?? null,
+    siteKeywords: r.site_keywords ?? null,
+    siteDescription: r.site_description ?? null,
+    heroImage: r.hero_image ?? null,
+    footerText: r.footer_text ?? null,
+    siteSubtitle: r.site_subtitle ?? null,
+  }
+  return NextResponse.json({ success: true, data })
 }
 
 export async function PUT(req: Request) {
