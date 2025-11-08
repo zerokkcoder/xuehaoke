@@ -367,13 +367,17 @@ export default function ResourceDetailPage() {
                     >
                       点击下载
                     </a>
-                    <span className="text-sm text-muted-foreground">（提取码: {extractionCode}）</span>
-                    <button
-                      onClick={copyExtractionCode}
-                      className="text-pink-500 hover:underline text-xs md:text-sm"
-                    >
-                      复制
-                    </button>
+                    {extractionCode && (
+                      <>
+                        <span className="text-sm text-muted-foreground">（提取码: {extractionCode}）</span>
+                        <button
+                          onClick={copyExtractionCode}
+                          className="text-pink-500 hover:underline text-xs md:text-sm"
+                        >
+                          复制
+                        </button>
+                      </>
+                    )}
                     {(serverAuthorized || hasAccess) && (
                       <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs">已购买，可直接下载</span>
                     )}
@@ -408,13 +412,14 @@ export default function ResourceDetailPage() {
               {/* Tags inside card bottom */}
               <div className="flex flex-wrap items-center gap-2 mt-4">
                 {resource.tags.map((tag: string, index: number) => (
-                  <span
+                  <Link
                     key={index}
+                    href={`/search?q=${encodeURIComponent(tag)}`}
                     className="px-3 py-1 text-xs md:text-sm rounded-none text-white hover:opacity-90 cursor-pointer transition-colors"
                     style={{ backgroundColor: tagColors[index % tagColors.length] }}
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -521,13 +526,14 @@ export default function ResourceDetailPage() {
               <h3 className="text-lg font-semibold text-foreground mb-4">热门标签</h3>
               <div className="flex flex-wrap gap-2">
                 {hotTags.map((tag, idx) => (
-                  <span
+                  <Link
                     key={tag.id}
+                    href={`/tag/${tag.id}`}
                     className="px-3 py-1 text-xs md:text-sm rounded-none text-white hover:opacity-90"
                     style={{ backgroundColor: tagColors[idx % tagColors.length] }}
                   >
                     {tag.name}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </div>

@@ -8,6 +8,13 @@ export async function GET(req: Request) {
     const size = Math.max(1, Math.min(50, Number(url.searchParams.get('size')) || 6))
     const skip = (page - 1) * size
     const q = (url.searchParams.get('q') || '').trim()
+    const categoryIdParam = url.searchParams.get('categoryId')
+    const subcategoryIdParam = url.searchParams.get('subcategoryId')
+    const tagIdParam = url.searchParams.get('tagId')
+    const sortParam = (url.searchParams.get('sort') || 'latest').trim()
+    const categoryId = categoryIdParam ? Number(categoryIdParam) : undefined
+    const subcategoryId = subcategoryIdParam ? Number(subcategoryIdParam) : undefined
+    const tagId = tagIdParam ? Number(tagIdParam) : undefined
     const where = q
       ? {
           OR: [
@@ -17,16 +24,34 @@ export async function GET(req: Request) {
         }
       : undefined
 
+    // 合并分类/子分类过滤条件
+    const finalWhere: any = { ...(where || {}) }
+    if (Number.isFinite(categoryId)) finalWhere.categoryId = Number(categoryId)
+    if (Number.isFinite(subcategoryId)) finalWhere.subcategoryId = Number(subcategoryId)
+    if (Number.isFinite(tagId)) finalWhere.tags = { some: { tagId: Number(tagId) } }
+
+    // 排序：latest(默认) / downloads / views / comments
+    const orderBy =
+      sortParam === 'downloads'
+        ? [{ downloadCount: 'desc' }]
+        : sortParam === 'views'
+        ? [{ viewCount: 'desc' }]
+        : sortParam === 'comments'
+        ? [{ hotScore: 'desc' }]
+        : [{ id: 'desc' }]
+
     // Debug log: observe incoming requests and parameters during development
-    console.log(`[API /resources] page=${page} size=${size} q="${q}"`) // eslint-disable-line no-console
+    console.log(`[API /resources] page=${page} size=${size} q="${q}" categoryId=${categoryId ?? ''} subcategoryId=${subcategoryId ?? ''} tagId=${tagId ?? ''} sort=${sortParam}`) // eslint-disable-line no-console
 
     const [total, rows] = await Promise.all([
-      prisma.resource.count({ where }),
+      prisma.resource.count({ where: finalWhere }),
       prisma.resource.findMany({
-        orderBy: [{ id: 'desc' }],
-        where,
+        orderBy,
+        where: finalWhere,
         select: {
           id: true,
+          categoryId: true,
+          subcategoryId: true,
           title: true,
           cover: true,
           category: { select: { name: true } },
@@ -42,7 +67,9 @@ export async function GET(req: Request) {
       title: r.title,
       cover: r.cover || null,
       categoryName: r.category?.name || '',
-      subcategoryName: r.subcategory?.name || ''
+      subcategoryName: r.subcategory?.name || '',
+      categoryId: r.categoryId,
+      subcategoryId: r.subcategoryId,
     }))
 
     return NextResponse.json({ success: true, data, pagination: { page, size, total } })

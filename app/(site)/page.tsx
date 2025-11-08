@@ -17,6 +17,7 @@ export default function Home() {
   const lastPageRef = useRef(0)
   const loadedIdsRef = useRef<Set<number>>(new Set())
   const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<'latest' | 'downloads' | 'views'>('latest')
   const [hasMore, setHasMore] = useState(true)
   const [autoLoadEnabled, setAutoLoadEnabled] = useState(false)
   // 移除初始化标记，改为监听 URL 的搜索参数变化
@@ -42,21 +43,28 @@ export default function Home() {
     }
     // 不在这里直接加载，等待 URL 变化后由 effect 统一触发加载，避免竞态或重复请求
     // 兜底：立即触发一次首轮加载（使用当前输入作为 q），不等 URL effect
-    loadMoreResources(q)
+    loadMoreResources(q, true, undefined, 1)
   }
 
-  const loadMoreResources = async (qOverride?: string, force?: boolean) => {
+  const loadMoreResources = async (
+    qOverride?: string,
+    force?: boolean,
+    sortOverride?: 'latest' | 'downloads' | 'views',
+    pageOverride?: number,
+    advance: boolean = true,
+  ) => {
     if (isLoading || (!hasMore && !force)) return
     setIsLoading(true)
     let computedTotal = 0
     let nextHasMoreFlag = false
     try {
-      const requestedPage = page
+      const requestedPage = pageOverride ?? page
       // 防重复：若当前页与最近成功加载的页相同，跳过
       if (requestedPage === lastPageRef.current) { setIsLoading(false); return }
       const activeQ = (qOverride ?? qParamValue) || ''
       const qParam = activeQ ? `&q=${encodeURIComponent(activeQ)}` : ''
-      const url = `/api/resources?page=${requestedPage}&size=${size}${qParam}`
+      const activeSort = sortOverride ?? sort
+      const url = `/api/resources?page=${requestedPage}&size=${size}${qParam}&sort=${activeSort}`
       const res = await fetch(url)
       if (!res.ok) { setIsLoading(false); return }
       let data: any = null
@@ -64,9 +72,9 @@ export default function Home() {
       const list = Array.isArray(data?.data) ? data.data : []
       const pg = data?.pagination; if (pg) { computedTotal = pg.total || 0; setTotal(computedTotal) }
       if (list.length === 0) {
-        // 标记已尝试当前页，推进页码，避免 Observer 再次请求同一页造成无限 loading
+        // 标记已尝试当前页，避免 Observer 再次请求同一页造成无限 loading
         lastPageRef.current = requestedPage
-        setPage(requestedPage + 1)
+        if (advance) setPage(requestedPage + 1)
         setIsLoading(false)
         return
       }
@@ -75,6 +83,8 @@ export default function Home() {
         title: r.title,
         coverImage: r.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&h=600&fit=crop',
         category: r.subcategoryName || r.categoryName || '其他',
+        categoryId: r.categoryId,
+        subcategoryId: r.subcategoryId,
       }))
       // 以 ref 跟踪已加载的唯一 ID，过滤掉重复项
       const filtered = next.filter(item => !loadedIdsRef.current.has(item.id))
@@ -85,7 +95,7 @@ export default function Home() {
       // 标记已成功加载的页；仅在有新增数据时推进下一页，否则停止自动加载
       lastPageRef.current = requestedPage
       if (nextHasMoreFlag) {
-        setPage(requestedPage + 1)
+        if (advance) setPage(requestedPage + 1)
       } else {
         // 无新增唯一数据，判定为已加载完，关闭自动加载
         setAutoLoadEnabled(false)
@@ -112,7 +122,8 @@ export default function Home() {
         const [entry] = entries
         // 使用全局 hasMore 状态控制是否继续加载
         if (entry.isIntersecting && hasMore && !isLoading) {
-          loadMoreResources(qParamValue)
+          const nextPage = (lastPageRef.current || 0) + 1
+          loadMoreResources(qParamValue, false, undefined, nextPage, true)
         }
       },
       { root: null, rootMargin: '200px', threshold: 0 }
@@ -132,9 +143,23 @@ export default function Home() {
     loadedIdsRef.current.clear()
     // 导航后先关闭 Observer，待当前加载完成再开启
     setAutoLoadEnabled(false)
-    loadMoreResources(qParamValue, true)
+    loadMoreResources(qParamValue, true, undefined, 1, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qParamValue])
+
+  const handleSortChange = (next: 'latest' | 'downloads' | 'views') => {
+    if (sort === next) return
+    setDisplayedResources([])
+    loadedIdsRef.current.clear()
+    lastPageRef.current = 0
+    setPage(1)
+    setTotal(0)
+    setHasMore(true)
+    setAutoLoadEnabled(false)
+    setIsLoading(false)
+    setSort(next)
+    ;(async () => { await loadMoreResources(undefined, true, next, 1, false) })()
+  }
 
   const showSearchView = (searchParams.get('q') !== null)
 
@@ -210,13 +235,12 @@ export default function Home() {
                 <span className="text-muted-foreground">分类</span>
                 <span className="px-2 py-0.5 rounded-full bg-pink-500 text-white">全部</span>
               </div>
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
                 <span className="text-muted-foreground">排序</span>
-                <span className="px-2 py-0.5 rounded-full bg-pink-500 text-white">最新发布</span>
-                <span className="px-2 py-0.5 rounded-full text-black">下载最多</span>
-                <span className="px-2 py-0.5 rounded-full text-black">浏览最多</span>
-                <span className="px-2 py-0.5 rounded-full text-black">评论最多</span>
-              </div>
+                <button onClick={() => handleSortChange('latest')} className={`px-2 py-0.5 rounded-full ${sort==='latest' ? 'bg-pink-500 text-white' : 'text-black'}`}>最新发布</button>
+                <button onClick={() => handleSortChange('downloads')} className={`px-2 py-0.5 rounded-full ${sort==='downloads' ? 'bg-pink-500 text-white' : 'text-black'}`}>下载最多</button>
+                <button onClick={() => handleSortChange('views')} className={`px-2 py-0.5 rounded-full ${sort==='views' ? 'bg-pink-500 text-white' : 'text-black'}`}>浏览最多</button>
+            </div>
             </div>
           </div>
         </section>
@@ -249,25 +273,7 @@ export default function Home() {
 
       {/* Categories Overview removed per request */}
       
-      {/* VIP Floating Button */}
-      <VIPFloatingButton />
+      {/* VIP Floating Button moved to site layout */}
     </div>
-  )
-}
-
-// VIP Floating Button Component
-function VIPFloatingButton() {
-  return (
-    <Link
-      href="/vip"
-      className="fixed bottom-6 right-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-50 group"
-    >
-      <div className="flex items-center justify-center">
-        <span className="text-xl font-bold">VIP</span>
-      </div>
-      <div className="absolute bottom-full right-0 mb-2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-        升级VIP会员
-      </div>
-    </Link>
   )
 }

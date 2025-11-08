@@ -8,6 +8,8 @@ type ResourceCardData = {
   coverImage: string
   title: string
   category: string
+  categoryId?: number
+  subcategoryId?: number
 }
 
 interface ResourceCardProps {
@@ -22,29 +24,39 @@ export default function ResourceCard({ resource, index = 0 }: ResourceCardProps)
       className="card cursor-pointer animate-fadeIn"
       style={{ animationDelay: `${index * 0.1}s` }}
     >
-      <Link href={`/resource/${resource.id}`} className="block">
-        {/* Split layout: image top, text bottom */}
-        <div className="flex flex-col h-40 md:h-48">
-          <div className="relative flex-1 overflow-hidden">
-            <Image
-              src={resource.coverImage}
-              alt={resource.title}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover"
-            />
-          </div>
-          <div className="flex-1 pl-3 flex flex-col justify-center gap-1">
+      {/* Split layout: image top, text bottom */}
+      <div className="flex flex-col h-48 md:h-56">
+        <Link href={`/resource/${resource.id}`} className="block relative h-2/3 overflow-hidden bg-white">
+          <Image
+            src={resource.coverImage}
+            alt={resource.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
+          />
+        </Link>
+        <div className="h-1/3 pl-3 pt-3 flex flex-col justify-start gap-1">
+          {resource.categoryId ? (
+            <Link
+              href={resource.subcategoryId ? `/category/${resource.categoryId}/${resource.subcategoryId}` : `/category/${resource.categoryId}`}
+              className="flex items-center text-xs md:text-sm text-muted-foreground hover:text-pink-500"
+            >
+              <span className="inline-block w-1.5 h-1.5 rounded-full border border-red-500 mr-2"></span>
+              {resource.category}
+            </Link>
+          ) : (
             <div className="flex items-center text-xs md:text-sm text-muted-foreground">
               <span className="inline-block w-1.5 h-1.5 rounded-full border border-red-500 mr-2"></span>
               {resource.category}
             </div>
-            <h3 className="text-sm md:text-base font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+          )}
+          <Link href={`/resource/${resource.id}`} className="text-foreground hover:text-primary">
+            <h3 className="text-sm md:text-base font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-colors" title={resource.title}>
               {resource.title}
             </h3>
-          </div>
+          </Link>
         </div>
-      </Link>
+      </div>
     </div>
   )
 }

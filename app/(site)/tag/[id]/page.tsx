@@ -1,48 +1,42 @@
-'use client';
+'use client'
 
-import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import ResourceCard from '@/components/ResourceCard';
+import { useEffect, useRef, useState } from 'react'
+import { useParams } from 'next/navigation'
+import Image from 'next/image'
+import ResourceCard from '@/components/ResourceCard'
 
-export default function CategoryPage() {
-  const params = useParams();
-  const categoryIdNum = Number(params.id as string);
-  const [category, setCategory] = useState<any>(null);
-  const [displayedResources, setDisplayedResources] = useState<{ id: number; coverImage: string; title: string; category: string }[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [size] = useState(6);
-  const [total, setTotal] = useState(0);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const lastPageRef = useRef(0);
-  const loadedIdsRef = useRef<Set<number>>(new Set());
-  const [hasMore, setHasMore] = useState(true);
-  const [autoLoadEnabled, setAutoLoadEnabled] = useState(false);
-  const [sort, setSort] = useState<'latest' | 'downloads' | 'views' | 'comments'>('latest')
+export default function TagPage() {
+  const params = useParams()
+  const tagId = Number(params.id as string)
+
+  const [tagName, setTagName] = useState<string>('标签')
+  const [displayedResources, setDisplayedResources] = useState<{ id: number; coverImage: string; title: string; category: string }[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [size] = useState(6)
+  const [total, setTotal] = useState(0)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const lastPageRef = useRef(0)
+  const loadedIdsRef = useRef<Set<number>>(new Set())
+  const [hasMore, setHasMore] = useState(true)
+  const [autoLoadEnabled, setAutoLoadEnabled] = useState(false)
+  const [sort, setSort] = useState<'latest' | 'downloads' | 'views'>('latest')
 
   useEffect(() => {
-    const loadCategory = async () => {
+    const loadTagName = async () => {
       try {
-        const res = await fetch('/api/categories')
+        const res = await fetch('/api/tags')
         const json = await res.json().catch(() => null)
         if (res.ok && json?.success) {
-          const list = Array.isArray(json.data) ? json.data : []
-          const found = list.find((c: any) => Number(c.id) === categoryIdNum)
-          setCategory(found || null)
+          const found = (json.data || []).find((t: any) => Number(t.id) === tagId)
+          setTagName(found?.name || '标签')
         }
       } catch {}
     }
-    loadCategory()
-  }, [categoryIdNum])
+    loadTagName()
+  }, [tagId])
 
-  const loadMoreResources = async (
-    sortOverride?: 'latest' | 'downloads' | 'views',
-    pageOverride?: number,
-    force?: boolean,
-  ) => {
-    if (!categoryIdNum) return
+  const loadMoreResources = async (sortOverride?: 'latest' | 'downloads' | 'views', pageOverride?: number, force?: boolean) => {
     if ((isLoading || !hasMore) && !force) return
     setIsLoading(true)
     let computedTotal = 0
@@ -51,7 +45,7 @@ export default function CategoryPage() {
       const requestedPage = pageOverride ?? page
       if (requestedPage === lastPageRef.current) { setIsLoading(false); return }
       const activeSort = sortOverride ?? sort
-      const url = `/api/resources?page=${requestedPage}&size=${size}&categoryId=${categoryIdNum}&sort=${activeSort}`
+      const url = `/api/resources?page=${requestedPage}&size=${size}&tagId=${tagId}&sort=${activeSort}`
       const res = await fetch(url)
       if (!res.ok) { setIsLoading(false); return }
       let data: any = null
@@ -80,7 +74,6 @@ export default function CategoryPage() {
   }
 
   useEffect(() => {
-    // reset and initial load
     setDisplayedResources([])
     setTotal(0)
     setPage(1)
@@ -90,18 +83,18 @@ export default function CategoryPage() {
     setAutoLoadEnabled(false)
     setIsLoading(false)
     ;(async () => { await loadMoreResources(sort, 1, true) })()
-  }, [categoryIdNum])
+  }, [tagId])
 
   useEffect(() => {
     if (!autoLoadEnabled) return
     const sentinel = sentinelRef.current
     if (!sentinel) return
-    const observer = new IntersectionObserver((entries) => { const [entry] = entries; if (entry.isIntersecting && hasMore && !isLoading) { loadMoreResources() } }, { root: null, rootMargin: '200px', threshold: 0 })
+    const observer = new IntersectionObserver((entries) => { const [entry] = entries; if (entry.isIntersecting && hasMore && !isLoading) { loadMoreResources(undefined, undefined, false) } }, { root: null, rootMargin: '200px', threshold: 0 })
     observer.observe(sentinel)
     return () => observer.disconnect()
   }, [autoLoadEnabled, displayedResources.length, isLoading, page, total])
 
-  const handleSortChange = (nextSort: 'latest' | 'downloads' | 'views' | 'comments') => {
+  const handleSortChange = (nextSort: 'latest' | 'downloads' | 'views') => {
     if (sort === nextSort) return
     setDisplayedResources([])
     setTotal(0)
@@ -115,38 +108,15 @@ export default function CategoryPage() {
     ;(async () => { await loadMoreResources(nextSort, 1, true) })()
   }
 
-  if (isLoading && displayedResources.length === 0) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!category) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">分类未找到</h1>
-          <Link href="/" className="text-primary hover:underline">
-            返回首页
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // use displayedResources instead of local mock pagination
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 pb-8">
-        {/* Hero section with centered text */}
+        {/* Hero section, no filter card below */}
         <section className="mb-6">
           <div className="relative w-screen left-1/2 -translate-x-1/2 h-48 md:h-64 overflow-hidden border border-border bg-card">
             <Image
               src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=1600&h=600&fit=crop"
-              alt="Category Hero"
+              alt="Tag Hero"
               fill
               className="object-cover"
               priority
@@ -154,48 +124,16 @@ export default function CategoryPage() {
             <div className="absolute inset-0 bg-black/35" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white">
-                <h1 className="text-2xl md:text-3xl font-bold mb-2">{category.name}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-2">{tagName}</h1>
                 <p className="text-sm md:text-base opacity-90">共找到 {total || displayedResources.length} 个资源</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 顶部过滤卡片：样式与首页一致，整合“分类 + 排序” */}
-        <div className="rounded-lg border border-border bg-card p-3 text-sm mt-4">
-          <div className="flex items-center flex-wrap gap-2 mb-2">
-            <span className="text-muted-foreground">分类</span>
-            <Link
-              href={`/category/${categoryIdNum}`}
-              className="px-2 py-0.5 rounded-full bg-pink-500 text-white"
-            >
-              全部
-            </Link>
-            {category.subcategories && category.subcategories.length > 0 && (
-              <>
-                {category.subcategories.map((subcategory: any) => (
-                  <Link
-                    key={subcategory.id}
-                    href={`/category/${categoryIdNum}/${subcategory.id}`}
-                    className="px-2 py-0.5 rounded-full text-black"
-                  >
-                    {subcategory.name}
-                  </Link>
-                ))}
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">排序</span>
-            <button onClick={() => handleSortChange('latest')} className={`px-2 py-0.5 rounded-full ${sort==='latest' ? 'bg-pink-500 text-white' : 'text-black'}`}>最新发布</button>
-            <button onClick={() => handleSortChange('downloads')} className={`px-2 py-0.5 rounded-full ${sort==='downloads' ? 'bg-pink-500 text-white' : 'text-black'}`}>下载最多</button>
-            <button onClick={() => handleSortChange('views')} className={`px-2 py-0.5 rounded-full ${sort==='views' ? 'bg-pink-500 text-white' : 'text-black'}`}>浏览最多</button>
-          </div>
-        </div>
+        {/* 标签页不需要排序卡片 */}
 
-        {/* Waterfall list same as home search */}
-
-        {/* Resources Grid/List */}
+        {/* Resources Grid */}
         {displayedResources.length === 0 ? (
           <div className="text-center mt-4 py-16">
             <div className="text-muted-foreground mb-4">
@@ -204,7 +142,7 @@ export default function CategoryPage() {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">暂无资源</h3>
-            <p className="text-muted-foreground">该分类下还没有资源，敬请期待。</p>
+            <p className="text-muted-foreground">该标签下还没有资源，敬请期待。</p>
           </div>
         ) : (
           <>
@@ -221,9 +159,7 @@ export default function CategoryPage() {
             )}
           </>
         )}
-
-        {/* Infinite scroll sentinel and loader above */}
       </div>
     </div>
-  );
+  )
 }

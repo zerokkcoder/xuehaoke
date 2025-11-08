@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { UserCircleIcon, Bars3Icon, XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 interface HeaderProps {
@@ -15,6 +16,7 @@ interface HeaderProps {
 type NavCategory = { id: number; name: string; subcategories: { id: number; name: string }[] }
 
 export default function Header({ currentUser, initialCategories = [] }: HeaderProps) {
+  const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [navCategories, setNavCategories] = useState<NavCategory[]>(initialCategories)
@@ -120,21 +122,14 @@ export default function Header({ currentUser, initialCategories = [] }: HeaderPr
                   <div className="flex items-center gap-1">
                     <Link
                       href={`/category/${category.id}`}
-                      className="flex items-center gap-1 text-foreground hover:text-primary"
-                      onClick={(e) => {
-                        if (hasSubs) {
-                          e.preventDefault()
-                          if (closeTimerRef.current) { window.clearTimeout(closeTimerRef.current); closeTimerRef.current = null }
-                          setOpenCategoryId(isOpen ? null : category.id)
-                        }
-                      }}
+                      className={`flex items-center gap-1 text-foreground hover:text-pink-500 pb-0.5 border-b-2 ${pathname?.startsWith(`/category/${category.id}`) ? 'border-pink-500' : 'border-transparent'}`}
                     >
                       <span className="text-sm">{category.name}</span>
                     </Link>
                     {hasSubs && (
                       <button
                         aria-label={isOpen ? '收起子类' : '展开子类'}
-                        className="p-1 text-muted-foreground hover:text-primary"
+                        className="p-1 text-muted-foreground hover:text-pink-500"
                         onClick={() => setOpenCategoryId(isOpen ? null : category.id)}
                       >
                         {isOpen ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
@@ -162,7 +157,7 @@ export default function Header({ currentUser, initialCategories = [] }: HeaderPr
                           <Link
                             key={subcategory.id}
                             href={`/category/${category.id}/${subcategory.id}`}
-                            className="block px-3 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-secondary"
+                            className="block px-3 py-2 text-sm text-muted-foreground hover:text-pink-500 hover:bg-secondary"
                           >
                             {subcategory.name}
                           </Link>
@@ -249,7 +244,7 @@ export default function Header({ currentUser, initialCategories = [] }: HeaderPr
                 <div key={category.id}>
                   <Link
                     href={`/category/${category.id}`}
-                    className="flex items-center gap-2 px-4 py-2 text-foreground hover:text-primary hover:bg-secondary rounded-md"
+                    className={`flex items-center gap-2 px-4 py-2 text-foreground hover:text-pink-500 hover:bg-secondary rounded-md ${pathname?.startsWith(`/category/${category.id}`) ? 'underline underline-offset-4 decoration-2 decoration-pink-500' : ''}`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground" aria-hidden="true" />
