@@ -106,6 +106,10 @@ export default function ResourceDetailPage() {
       }
     }
     load()
+    // 增加一次浏览量统计（忽略错误）
+    ;(async () => {
+      try { if (resourceId) await fetch(`/api/resources/${resourceId}/view`, { method: 'POST' }) } catch {}
+    })()
   }, [resourceId])
 
   // 查询是否已购买（或VIP）
@@ -241,6 +245,7 @@ export default function ResourceDetailPage() {
     if (result.success) {
       toast(`${result.message} (交易ID: ${result.transactionId})`, 'success');
       // 已购买或有权限，跳转下载链接
+      try { await fetch(`/api/resources/${resource.id}/download`, { method: 'POST' }) } catch {}
       if (resource.downloadUrl) {
         window.location.href = resource.downloadUrl;
       }
