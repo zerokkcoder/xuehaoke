@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const rows: any[] = await prisma.$queryRawUnsafe('SELECT site_name, site_keywords, site_description FROM site_settings LIMIT 1')
+    const rows: { site_name: string | null; site_keywords: string | null; site_description: string | null }[] = await prisma.$queryRawUnsafe('SELECT site_name, site_keywords, site_description FROM site_settings LIMIT 1')
     const r = rows?.[0]
     const title = (r?.site_name ? `${r.site_name} - 专业资源下载平台` : '酷库下载 - 专业资源下载平台')
     const description = r?.site_description || "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。"
@@ -38,18 +38,24 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SiteLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const cats = await prisma.category.findMany({
-    orderBy: [{ sort: 'asc' }, { id: 'desc' }],
-    select: {
-      id: true,
-      name: true,
-      subcategories: { orderBy: [{ sort: 'asc' }, { id: 'asc' }], select: { id: true, name: true } },
-    },
-  })
-  const initialCategories = cats.map(c => ({ id: c.id, name: c.name, subcategories: c.subcategories.map(s => ({ id: s.id, name: s.name })) }))
-  const sRows: any[] = await prisma.$queryRawUnsafe('SELECT site_name, site_logo FROM site_settings LIMIT 1')
-  const sr = sRows?.[0]
-  const initialSiteConfig = sr ? { siteName: sr.site_name || null, siteLogo: sr.site_logo || null } : null
+  let initialCategories: { id: number; name: string; subcategories: { id: number; name: string }[] }[] = []
+  try {
+    const cats = await prisma.category.findMany({
+      orderBy: [{ sort: 'asc' }, { id: 'desc' }],
+      select: {
+        id: true,
+        name: true,
+        subcategories: { orderBy: [{ sort: 'asc' }, { id: 'asc' }], select: { id: true, name: true } },
+      },
+    })
+    initialCategories = cats.map(c => ({ id: c.id, name: c.name, subcategories: c.subcategories.map(s => ({ id: s.id, name: s.name })) }))
+  } catch {}
+  let initialSiteConfig: { siteName?: string | null; siteLogo?: string | null } | null = null
+  try {
+    const sRows: { site_name: string | null; site_logo: string | null }[] = await prisma.$queryRawUnsafe('SELECT site_name, site_logo FROM site_settings LIMIT 1')
+    const sr = sRows?.[0]
+    initialSiteConfig = sr ? { siteName: sr.site_name || null, siteLogo: sr.site_logo || null } : null
+  } catch {}
 
   return (
     <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>

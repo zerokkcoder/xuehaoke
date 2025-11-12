@@ -21,10 +21,7 @@ export async function GET() {
       siteSubtitle: r.site_subtitle ?? null,
     }
     return NextResponse.json({ success: true, data }, { headers: { 'Cache-Control': 'no-store' } })
-  } catch (err: any) {
-    return NextResponse.json(
-      { success: false, message: err?.message || '获取站点设置失败' },
-      { status: 500, headers: { 'Cache-Control': 'no-store' } }
-    )
+  } catch {
+    return NextResponse.json({ success: true, data: null }, { headers: { 'Cache-Control': 'no-store' } })
   }
 }

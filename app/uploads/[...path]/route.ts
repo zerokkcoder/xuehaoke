@@ -14,14 +14,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
     const resolvedBase = path.resolve(baseDir)
     const resolvedAbs = path.resolve(abs)
     if (!resolvedAbs.startsWith(resolvedBase)) return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
-    await stat(abs)
+    const st = await stat(abs)
+    const ifNoneMatch = (req as any).headers.get('if-none-match') || ''
+    const ifModifiedSince = (req as any).headers.get('if-modified-since') || ''
+    const etag = `"${st.size}-${st.mtimeMs}"`
+    const lastModified = new Date(st.mtime).toUTCString()
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      return new NextResponse(null, { status: 304, headers: { 'ETag': etag, 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=31536000, immutable' } })
+    }
+    if (ifModifiedSince && new Date(ifModifiedSince).getTime() >= new Date(st.mtime).getTime()) {
+      return new NextResponse(null, { status: 304, headers: { 'ETag': etag, 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=31536000, immutable' } })
+    }
     const buf = await readFile(abs)
     const ext = path.extname(abs).toLowerCase()
     let ct = 'application/octet-stream'
     if (ext === '.png') ct = 'image/png'
     else if (ext === '.jpg' || ext === '.jpeg') ct = 'image/jpeg'
     else if (ext === '.webp') ct = 'image/webp'
-    return new NextResponse(buf, { headers: { 'Content-Type': ct, 'Cache-Control': 'no-store' } })
+    return new NextResponse(buf, { headers: { 'Content-Type': ct, 'ETag': etag, 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=31536000, immutable' } })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || 'Not Found' }, { status: 404 })
   }

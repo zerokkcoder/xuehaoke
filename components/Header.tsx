@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { UserCircleIcon, Bars3Icon, XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
@@ -108,7 +109,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 link">
-            <img src={siteConfig?.siteLogo ? `${siteConfig.siteLogo}${siteConfig.siteLogo.includes('?') ? '&' : '?'}v=${logoVersion}` : '/logo.png'} alt="logo" className="w-7 h-7 object-contain" />
+            <Image src={siteConfig?.siteLogo || '/logo.png'} alt="logo" width={28} height={28} className="object-contain" priority />
             <span className="text-lg font-semibold">{siteConfig?.siteName || '酷库下载'}</span>
           </Link>
 
@@ -195,7 +196,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
                   className="flex items-center gap-2 text-foreground hover:text-primary"
                 >
                   {siteUser?.avatarUrl ? (
-                    <img src={siteUser.avatarUrl} alt="avatar" className="w-6 h-6 rounded-full object-cover" />
+                    <Image src={siteUser.avatarUrl} alt="avatar" width={24} height={24} className="rounded-full object-cover" />
                   ) : (
                     <UserCircleIcon className="w-6 h-6" />
                   )}
