@@ -25,6 +25,8 @@ export default function Header({ currentUser, initialCategories = [], initialSit
   const [siteUser, setSiteUser] = useState<{ username: string; isVip: boolean; avatarUrl?: string } | null>(currentUser ?? null)
   const [siteConfig, setSiteConfig] = useState<{ siteName?: string | null; siteLogo?: string | null } | null>(initialSiteConfig)
   const closeTimerRef = useRef<number | null>(null)
+  const [logoVersion, setLogoVersion] = useState('')
+  useEffect(() => { setLogoVersion(String(Date.now())) }, [])
 
   useEffect(() => {
     if (initialCategories && initialCategories.length > 0) return
@@ -59,9 +61,8 @@ export default function Header({ currentUser, initialCategories = [], initialSit
     return () => controller.abort()
   }, [])
 
-  // Load public site settings (logo/name) if not provided from server
+  // Always refresh public site settings (logo/name) on mount to avoid stale cache
   useEffect(() => {
-    if (initialSiteConfig) return
     const controller = new AbortController()
     const load = async () => {
       try {
@@ -72,7 +73,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
     }
     load()
     return () => controller.abort()
-  }, [initialSiteConfig])
+  }, [])
 
   // 前端保存的登录用户（localStorage）优先显示
   useEffect(() => {
@@ -107,7 +108,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 link">
-            <img src={siteConfig?.siteLogo || '/logo.png'} alt="logo" className="w-7 h-7 object-contain" />
+            <img src={siteConfig?.siteLogo ? `${siteConfig.siteLogo}${siteConfig.siteLogo.includes('?') ? '&' : '?'}v=${logoVersion}` : '/logo.png'} alt="logo" className="w-7 h-7 object-contain" />
             <span className="text-lg font-semibold">{siteConfig?.siteName || '酷库下载'}</span>
           </Link>
 
