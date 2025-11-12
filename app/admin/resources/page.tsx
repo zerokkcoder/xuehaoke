@@ -2,9 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useToast } from '@/components/Toast'
-import dynamic from 'next/dynamic'
 import MarkdownIt from 'markdown-it'
-import 'react-markdown-editor-lite/lib/index.css'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/utils'
 import ConfirmDialog from '@/app/admin/_components/ConfirmDialog'
@@ -55,20 +53,27 @@ function renderMd(md: string) {
 
 export default function AdminResourcesPage() {
   const { toast } = useToast()
-  const MdEditor = useMemo(() => dynamic(() => import('react-markdown-editor-lite'), { ssr: false }), [])
   const mdParser = useMemo(() => new MarkdownIt(), [])
 
-  // 统一的编辑器组件，避免直接在 JSX 中写 dynamic
-  const MarkdownEditor = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => (
-    // 使用非受控模式，避免输入时焦点丢失
-    // @ts-ignore
-    <MdEditor
-      style={{ height: 360 }}
-      defaultValue={value}
-      renderHTML={(text: string) => mdParser.render(text)}
-      onChange={({ text }: any) => onChange(text)}
-    />
-  )
+  // 极简 Markdown 编辑器：左侧输入，右侧预览
+  const MarkdownEditor = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
+    const [text, setText] = useState<string>(value || '')
+    useEffect(() => { setText(value || '') }, [value])
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <textarea
+          className="input w-full h-[360px] resize-vertical"
+          value={text}
+          onChange={(e) => { const t = e.target.value; setText(t); onChange(t) }}
+          placeholder="在此输入 Markdown 内容"
+        />
+        <div
+          className="prose max-w-none p-3 rounded border bg-background overflow-auto h-[360px]"
+          dangerouslySetInnerHTML={{ __html: mdParser.render(text) }}
+        />
+      </div>
+    )
+  }
   const [list, setList] = useState<ResItem[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
