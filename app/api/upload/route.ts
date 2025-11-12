@@ -52,8 +52,16 @@ export async function DELETE(req: Request) {
     }
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
     const target = path.join(uploadsDir, path.basename(url))
-    await unlink(target)
-    return NextResponse.json({ success: true })
+    try {
+      await unlink(target)
+      return NextResponse.json({ success: true })
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') {
+        // 文件不存在，视为删除成功（幂等处理）
+        return NextResponse.json({ success: true })
+      }
+      throw err
+    }
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '删除失败' }, { status: 500 })
   }
