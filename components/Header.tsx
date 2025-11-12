@@ -68,7 +68,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
       try {
         const res = await fetch('/api/site/settings', { signal: controller.signal, cache: 'no-store' })
         const json = await res.json().catch(() => ({}))
-        if (res.ok && json?.success) setSiteConfig(json.data)
+        if (res.ok && json?.success && json.data) setSiteConfig(json.data)
       } catch {}
     }
     load()
