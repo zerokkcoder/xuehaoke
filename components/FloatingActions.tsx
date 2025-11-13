@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import VIPFloatingButton from '@/components/VIPFloatingButton'
+import FavoritesFloatingButton from '@/components/FavoritesFloatingButton'
 import BackToTopButton from '@/components/BackToTopButton'
 
 export default function FloatingActions() {
@@ -21,6 +22,7 @@ export default function FloatingActions() {
 
   return (
     <div className="fixed bottom-36 right-6 flex flex-col items-end gap-3 z-50">
+      <FavoritesFloatingButton />
       <VIPFloatingButton />
       {showBackToTop && <BackToTopButton />}
     </div>

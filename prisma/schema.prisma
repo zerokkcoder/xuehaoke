@@ -204,3 +204,13 @@ model SiteSetting {
 
   @@map("site_settings")
 }
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  title     String
+  url       String   @db.Text
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("favorites")
+}
