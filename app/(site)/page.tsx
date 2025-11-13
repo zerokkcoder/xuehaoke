@@ -264,13 +264,14 @@ function HomeInner() {
       <section className="mt-6">
         <div className="container mx-auto">
           {/* Resources Grid - Waterfall Layout */}
-          <div className="grid grid-auto-fit justify-center gap-5 md:gap-6">
+          <div className="grid grid-auto-fit gap-4 md:gap-5">
             {displayedResources.map((resource, index) => (
-              <ResourceCard 
-                key={resource.id} 
-                resource={resource} 
-                index={index}
-              />
+              <div key={resource.id} className="w-[240px] md:w-[280px]">
+                <ResourceCard 
+                  resource={resource} 
+                  index={index}
+                />
+              </div>
             ))}
           </div>
           {/* Infinite scroll sentinel */}
