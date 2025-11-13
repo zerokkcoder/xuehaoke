@@ -4,7 +4,9 @@ import prisma from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
-  const base = new URL(req.url).origin
+  const proto = req.headers.get('x-forwarded-proto') || 'https'
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || new URL(req.url).host
+  const base = `${proto}://${host}`
   const urls: string[] = []
   urls.push(`${base}/`)
   const [cats, tags, resources] = await Promise.all([
