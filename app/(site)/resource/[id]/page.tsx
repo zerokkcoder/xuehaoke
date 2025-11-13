@@ -55,7 +55,7 @@ export default function ResourceDetailPage() {
           downloadUrl: firstDl?.url || '',
           downloadCode: firstDl?.code || '',
           price: Number(r.price || 0),
-          tags: Array.isArray(r.tags) ? r.tags.map((t: any) => t.name) : [],
+          tags: Array.isArray(r.tags) ? r.tags.map((t: any) => ({ id: Number(t?.id ?? t?.tagId), name: String(t?.name ?? t?.tag?.name ?? '') })) : [],
           isNew: false,
           isPopular: false,
           isVipOnly: false,
@@ -194,7 +194,7 @@ export default function ResourceDetailPage() {
         downloadUrl: firstDl?.url || '',
         downloadCode: firstDl?.code || '',
         price: Number(r.price || 0),
-        tags: Array.isArray(r.tags) ? r.tags.map((t: any) => t.name) : [],
+        tags: Array.isArray(r.tags) ? r.tags.map((t: any) => ({ id: Number(t?.id ?? t?.tagId), name: String(t?.name ?? t?.tag?.name ?? '') })) : [],
         isNew: false,
         isPopular: false,
         isVipOnly: false,
@@ -416,14 +416,14 @@ export default function ResourceDetailPage() {
               </div>
               {/* Tags inside card bottom */}
               <div className="flex flex-wrap items-center gap-2 mt-4">
-                {resource.tags.map((tag: string, index: number) => (
+                {resource.tags.map((tag: { id: number; name: string }, index: number) => (
                   <Link
-                    key={index}
-                    href={`/search?q=${encodeURIComponent(tag)}`}
+                    key={tag.id}
+                    href={`/tag/${tag.id}`}
                     className="px-3 py-1 text-xs md:text-sm rounded-none text-white hover:opacity-90 cursor-pointer transition-colors"
                     style={{ backgroundColor: tagColors[index % tagColors.length] }}
                   >
-                    {tag}
+                    {tag.name}
                   </Link>
                 ))}
               </div>
