@@ -32,10 +32,12 @@ export async function POST(req: Request) {
     // Issue JWT and set HttpOnly cookie
     const secret = process.env.ADMIN_JWT_SECRET || 'dev_secret_change_me'
     const token = jwt.sign({ uid: user.id, username: user.username, role: user.role }, secret, { expiresIn: remember ? '30d' : '2h' })
+    const proto = (req as any).headers.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    const isHttps = String(proto).toLowerCase() === 'https'
     const res = NextResponse.json({ success: true })
     res.cookies.set('admin_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
       path: '/',
       maxAge: remember ? 30 * 24 * 60 * 60 : 2 * 60 * 60,
