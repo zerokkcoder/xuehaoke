@@ -40,7 +40,9 @@ export default function AdminPage() {
         setAuthChecked(true)
       }
     }
+    const timer = setTimeout(() => setAuthChecked(true), 5000)
     loadMe()
+    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {

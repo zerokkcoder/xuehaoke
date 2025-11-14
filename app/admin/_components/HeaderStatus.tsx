@@ -31,7 +31,9 @@ export default function HeaderStatus() {
         setChecking(false)
       }
     }
+    const timer = setTimeout(() => setChecking(false), 5000)
     loadMe()
+    return () => clearTimeout(timer)
   }, [])
 
   if (checking) {
