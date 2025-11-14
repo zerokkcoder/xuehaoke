@@ -23,11 +23,20 @@ export default function Header({ currentUser, initialCategories = [], initialSit
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [navCategories, setNavCategories] = useState<NavCategory[]>(initialCategories)
   const [openCategoryId, setOpenCategoryId] = useState<number | null>(null)
-  const [siteUser, setSiteUser] = useState<{ username: string; isVip: boolean; avatarUrl?: string } | null>(currentUser ?? null)
+  const [siteUser, setSiteUser] = useState<{ username: string; isVip: boolean; avatarUrl?: string } | null>(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem('site_user') : null
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed && typeof parsed.username === 'string') {
+          return { username: parsed.username, isVip: !!parsed.isVip, avatarUrl: parsed.avatarUrl }
+        }
+      }
+    } catch {}
+    return currentUser ?? null
+  })
   const [siteConfig, setSiteConfig] = useState<{ siteName?: string | null; siteLogo?: string | null } | null>(initialSiteConfig)
   const closeTimerRef = useRef<number | null>(null)
-  const [logoVersion, setLogoVersion] = useState('')
-  useEffect(() => { setLogoVersion(String(Date.now())) }, [])
 
   useEffect(() => {
     if (initialCategories && initialCategories.length > 0) return
@@ -76,18 +85,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
     return () => controller.abort()
   }, [])
 
-  // 前端保存的登录用户（localStorage）优先显示
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem('site_user')
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed && typeof parsed.username === 'string') {
-          setSiteUser({ username: parsed.username, isVip: !!parsed.isVip, avatarUrl: parsed.avatarUrl })
-        }
-      }
-    } catch {}
-  }, [])
+  
 
   const handleLogout = () => {
     // 调用后端清除 httpOnly 会话 Cookie
