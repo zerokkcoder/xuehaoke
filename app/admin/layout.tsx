@@ -25,6 +25,36 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
     return () => controller.abort()
   }, [])
 
+  useEffect(() => {
+    const onError = (event: ErrorEvent) => {
+      try {
+        const src = String(event.filename || '')
+        const stack = String(event.error?.stack || '')
+        const noise = src.startsWith('chrome-extension://') || stack.includes('chrome-extension://') || /content\.js|iframe\.js/.test(src) || /content\.js|iframe\.js/.test(stack)
+        if (noise) return
+        const payload = { message: String(event.message || ''), stack, source: src, path: window.location.pathname, ua: navigator.userAgent, time: Date.now() }
+        fetch('/api/admin/error-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'same-origin' }).catch(() => {})
+      } catch {}
+    }
+    const onRejection = (e: PromiseRejectionEvent) => {
+      try {
+        const reason: any = e.reason
+        const message = typeof reason === 'string' ? reason : String(reason?.message || reason)
+        const stack = String(reason?.stack || '')
+        const noise = stack.includes('chrome-extension://') || /content\.js|iframe\.js/.test(stack)
+        if (noise) return
+        const payload = { message, stack, source: '', path: window.location.pathname, ua: navigator.userAgent, time: Date.now() }
+        fetch('/api/admin/error-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'same-origin' }).catch(() => {})
+      } catch {}
+    }
+    window.addEventListener('error', onError)
+    window.addEventListener('unhandledrejection', onRejection)
+    return () => {
+      window.removeEventListener('error', onError)
+      window.removeEventListener('unhandledrejection', onRejection)
+    }
+  }, [])
+
   if (isLogin) {
     return <div className="min-h-screen bg-background antialiased">{children}</div>
   }
