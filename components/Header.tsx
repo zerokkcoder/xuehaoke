@@ -10,6 +10,7 @@ interface HeaderProps {
   currentUser?: {
     username: string
     isVip: boolean
+    avatarUrl?: string
   }
   initialCategories?: NavCategory[]
   initialSiteConfig?: { siteName?: string | null; siteLogo?: string | null } | null
@@ -23,20 +24,10 @@ export default function Header({ currentUser, initialCategories = [], initialSit
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [navCategories, setNavCategories] = useState<NavCategory[]>(initialCategories)
   const [openCategoryId, setOpenCategoryId] = useState<number | null>(null)
-  const [siteUser, setSiteUser] = useState<{ username: string; isVip: boolean; avatarUrl?: string } | null>(() => {
-    try {
-      const raw = typeof window !== 'undefined' ? window.localStorage.getItem('site_user') : null
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed && typeof parsed.username === 'string') {
-          return { username: parsed.username, isVip: !!parsed.isVip, avatarUrl: parsed.avatarUrl }
-        }
-      }
-    } catch {}
-    return currentUser ?? null
-  })
+  const [siteUser, setSiteUser] = useState<{ username: string; isVip: boolean; avatarUrl?: string } | null>(currentUser ?? null)
   const [siteConfig, setSiteConfig] = useState<{ siteName?: string | null; siteLogo?: string | null } | null>(initialSiteConfig)
   const closeTimerRef = useRef<number | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     if (initialCategories && initialCategories.length > 0) return
@@ -85,7 +76,18 @@ export default function Header({ currentUser, initialCategories = [], initialSit
     return () => controller.abort()
   }, [])
 
-  
+  useEffect(() => {
+    setMounted(true)
+    try {
+      const raw = window.localStorage.getItem('site_user')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed && typeof parsed.username === 'string') {
+          setSiteUser({ username: parsed.username, isVip: !!parsed.isVip, avatarUrl: parsed.avatarUrl })
+        }
+      }
+    } catch {}
+  }, [])
 
   const handleLogout = () => {
     // 调用后端清除 httpOnly 会话 Cookie
@@ -187,21 +189,21 @@ export default function Header({ currentUser, initialCategories = [], initialSit
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">
-            {siteUser ? (
+            {(mounted ? siteUser : currentUser) ? (
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center gap-2 text-foreground hover:text-primary"
                 >
-                  {siteUser?.avatarUrl ? (
-                    <Image src={siteUser.avatarUrl} alt="avatar" width={24} height={24} className="rounded-full object-cover" />
+                  {(mounted ? siteUser : currentUser)?.avatarUrl ? (
+                    <Image src={(mounted ? siteUser : currentUser)!.avatarUrl as string} alt="avatar" width={24} height={24} className="rounded-full object-cover" />
                   ) : (
                     <UserCircleIcon className="w-6 h-6" />
                   )}
                   <span className="hidden sm:block text-sm font-medium">
-                    {siteUser.username}
+                    {(mounted ? siteUser : currentUser)!.username}
                   </span>
-                  {siteUser.isVip && (
+                  {(mounted ? siteUser : currentUser)!.isVip && (
                     <span className="badge">VIP</span>
                   )}
                 </button>
