@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       description,
       alternates: { canonical: `/resource/${params.id}` },
       openGraph: {
-        title,
+        title: twitterTitle,
         description,
         images: [{ url: image }],
         type: 'article',
