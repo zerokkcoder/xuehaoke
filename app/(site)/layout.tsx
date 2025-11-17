@@ -22,17 +22,39 @@ const geistMono = Geist_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const rows: { site_name: string | null; site_keywords: string | null; site_description: string | null }[] = await prisma.$queryRawUnsafe('SELECT site_name, site_keywords, site_description FROM site_settings LIMIT 1')
+    const rows: { site_name: string | null; site_keywords: string | null; site_description: string | null; site_logo: string | null }[] = await prisma.$queryRawUnsafe('SELECT site_name, site_keywords, site_description, site_logo FROM site_settings LIMIT 1')
     const r = rows?.[0]
-    const title = (r?.site_name ? `${r.site_name} - 专业资源下载平台` : '酷库下载 - 专业资源下载平台')
+    const title = (r?.site_name ? `${r.site_name} - 专业资源下载平台` : '骇课网 - 专业资源下载平台')
     const description = r?.site_description || "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。"
     const keywords = r?.site_keywords || "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计"
-    return { title, description, keywords }
+    const logo = r?.site_logo || '/logo.png'
+    return {
+      title,
+      description,
+      keywords,
+      robots: { index: true, follow: true },
+      alternates: { canonical: '/' },
+      openGraph: {
+        title,
+        description,
+        siteName: r?.site_name || '骇课网',
+        images: [{ url: logo }],
+        type: 'website',
+        locale: 'zh_CN',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [logo],
+      },
+    }
   } catch {
     return {
-      title: "酷库下载 - 专业资源下载平台",
+      title: "骇课网 - 专业资源下载平台",
       description: "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。",
       keywords: "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计",
+      robots: { index: true, follow: true },
     }
   }
 }
