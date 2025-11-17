@@ -6,6 +6,8 @@ import HeaderStatus from "./_components/HeaderStatus";
 import { HomeIcon, Squares2X2Icon, DocumentIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, TagIcon, UserIcon, StarIcon, CreditCardIcon, Cog6ToothIcon, BookmarkIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname()
   const isLogin = pathname === "/admin/login"

@@ -8,13 +8,13 @@ export async function GET(req: Request) {
   const match = cookieHeader.match(/admin_token=([^;]+)/)
   const tok = token || (match ? match[1] : '')
   if (!tok) {
-    return NextResponse.json({ authenticated: false }, { status: 401 })
+    return NextResponse.json({ authenticated: false }, { status: 401, headers: { 'Cache-Control': 'no-store' } })
   }
   try {
     const secret = process.env.ADMIN_JWT_SECRET || 'dev_secret_change_me'
     const payload = jwt.verify(tok, secret) as any
-    return NextResponse.json({ authenticated: true, user: { id: payload.uid, username: payload.username, role: payload.role } })
+    return NextResponse.json({ authenticated: true, user: { id: payload.uid, username: payload.username, role: payload.role } }, { headers: { 'Cache-Control': 'no-store' } })
   } catch {
-    return NextResponse.json({ authenticated: false }, { status: 401 })
+    return NextResponse.json({ authenticated: false }, { status: 401, headers: { 'Cache-Control': 'no-store' } })
   }
 }
