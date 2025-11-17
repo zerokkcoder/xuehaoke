@@ -3,9 +3,15 @@ import prisma from '@/lib/prisma'
 
 export async function getAlipay() {
   // Prefer database settings; fallback to env (use raw SQL to avoid schema generation issues)
-  let setting: any = null
+  type SiteSettingsRow = {
+    alipay_app_id?: string | null
+    alipay_private_key?: string | null
+    alipay_public_key?: string | null
+    alipay_gateway?: string | null
+  }
+  let setting: SiteSettingsRow | null = null
   try {
-    const rows: any[] = await prisma.$queryRawUnsafe('SELECT alipay_app_id, alipay_private_key, alipay_public_key, alipay_gateway FROM site_settings LIMIT 1')
+    const rows: SiteSettingsRow[] = await prisma.$queryRawUnsafe('SELECT alipay_app_id, alipay_private_key, alipay_public_key, alipay_gateway FROM site_settings LIMIT 1')
     setting = rows?.[0] || null
   } catch {}
   const appId = setting?.alipay_app_id || process.env.ALIPAY_APP_ID
@@ -30,8 +36,8 @@ export async function getAlipay() {
 
 export async function getNotifyUrl() {
   try {
-    const rows: any[] = await prisma.$queryRawUnsafe('SELECT alipay_notify_url FROM site_settings LIMIT 1')
-    const r = rows?.[0]
+    const rows: { alipay_notify_url?: string | null }[] = await prisma.$queryRawUnsafe('SELECT alipay_notify_url FROM site_settings LIMIT 1')
+    const r: { alipay_notify_url?: string | null } | undefined = rows?.[0]
     return r?.alipay_notify_url || process.env.ALIPAY_NOTIFY_URL || ''
   } catch {
     return process.env.ALIPAY_NOTIFY_URL || ''

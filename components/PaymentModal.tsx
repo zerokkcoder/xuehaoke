@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useToast } from '@/components/Toast'
+import Image from 'next/image'
 // import { processPayment, generateOrderId, paymentMethods, createPaymentStatus } from '@/lib/payment'
 
 interface PaymentModalProps {
@@ -20,7 +21,7 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
   const [paymentStep, setPaymentStep] = useState<'select' | 'processing' | 'qr' | 'success'>('select')
   const [paymentData, setPaymentData] = useState<{ qrCode?: string; paymentUrl?: string; transactionId?: string; outTradeNo?: string }>({})
   const [isPolling, setIsPolling] = useState(false)
-  const pollRef = useRef<any>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { toast } = useToast()
 
 
@@ -208,9 +209,11 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
               <div className="bg-muted p-6 rounded-lg mb-4">
                 {paymentData.qrCode ? (
                   <div className="text-center">
-                    <img
+                    <Image
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(paymentData.qrCode)}`}
                       alt="支付宝扫码二维码"
+                      width={192}
+                      height={192}
                       className="w-48 h-48 mx-auto mb-4 rounded border border-border bg-white"
                     />
                     <p className="text-sm text-muted-foreground">请使用支付宝扫描二维码完成支付</p>

@@ -31,10 +31,11 @@ export function getResourcesByCategory(categoryName: string) {
 
 // Compatibility helper: filter by category id against provided resources list
 // Used by category page: filterResourcesByCategory(resources, categoryId)
-export function filterResourcesByCategory(resourceList: any[], categoryId: string) {
+import type { Resource } from './mock-data'
+export function filterResourcesByCategory(resourceList: Resource[], categoryId: string) {
   const category = getCategoryById(categoryId)
   if (!category) return []
-  return resourceList.filter((resource: any) => resource.category === category.name)
+  return resourceList.filter((resource) => resource.category === category.name)
 }
 
 export function getResourcesBySubcategory(subcategoryName: string) {

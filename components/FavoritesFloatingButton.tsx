@@ -9,10 +9,10 @@ export default function FavoritesFloatingButton({ className = '' }: { className?
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem('site_user')
-      if (!raw) { setVip(false); return }
+      if (!raw) { setTimeout(() => setVip(false), 0); return }
       const u = JSON.parse(raw)
       const username = u?.username
-      if (!username) { setVip(false); return }
+      if (!username) { setTimeout(() => setVip(false), 0); return }
       fetch('/api/user/me', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username })
       }).then(async (res) => {
@@ -23,10 +23,10 @@ export default function FavoritesFloatingButton({ className = '' }: { className?
           const active = !!json.data?.isVip && (expire ? expire > now : true)
           setVip(active)
         } else {
-          setVip(false)
+          setTimeout(() => setVip(false), 0)
         }
-      }).catch(() => { setVip(false) })
-    } catch { setVip(false) }
+      }).catch(() => { setTimeout(() => setVip(false), 0) })
+    } catch { setTimeout(() => setVip(false), 0) }
   }, [])
 
   if (!vip) return null

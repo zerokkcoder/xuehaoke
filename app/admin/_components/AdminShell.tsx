@@ -37,9 +37,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     }
     const onRejection = (e: PromiseRejectionEvent) => {
       try {
-        const reason: any = e.reason
-        const message = typeof reason === 'string' ? reason : String(reason?.message || reason)
-        const stack = String(reason?.stack || '')
+        const reason: unknown = e.reason
+        const isObj = typeof reason === 'object' && reason !== null
+        const message = typeof reason === 'string' ? reason : (isObj && 'message' in (reason as Record<string, unknown>) ? String((reason as Record<string, unknown>).message) : String(reason))
+        const stack = isObj && 'stack' in (reason as Record<string, unknown>) ? String((reason as Record<string, unknown>).stack) : ''
         const noise = stack.includes('chrome-extension://') || /content\.js|iframe\.js/.test(stack)
         if (noise) return
         const payload = { message, stack, source: '', path: window.location.pathname, ua: navigator.userAgent, time: Date.now() }

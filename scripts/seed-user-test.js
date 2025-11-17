@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client')
-const crypto = require('crypto')
+import { PrismaClient } from '@prisma/client'
+import crypto from 'crypto'
 
 function hashPassword(password) {
   const salt = crypto.randomBytes(16)

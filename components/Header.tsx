@@ -36,26 +36,26 @@ export default function Header({ currentUser, initialCategories = [], initialSit
       try {
         const res = await fetch('/api/categories', { signal: controller.signal, keepalive: true, cache: 'no-store' })
         if (!res.ok) return
-        let data: any = null
+        let data: unknown = null
         try { data = await res.json() } catch { return }
-        const incoming = Array.isArray(data?.data) ? data.data : []
+        const incoming: NavCategory[] = Array.isArray((data as any)?.data) ? (data as any).data : []
         const seenCat = new Set<number>()
         const dedupCats: NavCategory[] = []
         for (const c of incoming) {
           if (seenCat.has(c.id)) continue
           seenCat.add(c.id)
           const seenSub = new Set<number>()
-          const subs = (c.subcategories || []).filter((s: any) => {
+          const subs = (c.subcategories || []).filter((s: { id: number; name: string }) => {
             if (seenSub.has(s.id)) return false
             seenSub.add(s.id)
             return true
-          }).map((s: any) => ({ id: s.id, name: s.name }))
+          }).map((s: { id: number; name: string }) => ({ id: s.id, name: s.name }))
           dedupCats.push({ id: c.id, name: c.name, subcategories: subs })
         }
         setNavCategories(dedupCats)
-      } catch (err: any) {
+      } catch (err: unknown) {
         // 如果是主动取消（页面切换/卸载），不记录错误
-        if (err?.name === 'AbortError') return
+        if (typeof err === 'object' && err && (err as { name?: string }).name === 'AbortError') return
       }
     }
     load()
@@ -77,13 +77,13 @@ export default function Header({ currentUser, initialCategories = [], initialSit
   }, [])
 
   useEffect(() => {
-    setMounted(true)
+    setTimeout(() => setMounted(true), 0)
     try {
       const raw = window.localStorage.getItem('site_user')
       if (raw) {
         const parsed = JSON.parse(raw)
         if (parsed && typeof parsed.username === 'string') {
-          setSiteUser({ username: parsed.username, isVip: !!parsed.isVip, avatarUrl: parsed.avatarUrl })
+          setTimeout(() => setSiteUser({ username: parsed.username, isVip: !!parsed.isVip, avatarUrl: parsed.avatarUrl }), 0)
         }
       }
     } catch {}

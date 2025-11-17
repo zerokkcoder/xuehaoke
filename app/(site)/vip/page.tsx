@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
-import { currentUser } from '@/lib/utils';
-import { CheckIcon, StarIcon } from '@heroicons/react/24/solid';
+import { CheckIcon } from '@heroicons/react/24/solid';
 import PaymentModal from '@/components/PaymentModal';
 
 export default function VIPPage() {
@@ -79,16 +78,7 @@ export default function VIPPage() {
     } catch {}
   }, [])
 
-  const benefits = [
-    '无限下载VIP专享资源',
-    '每日免费下载次数增加',
-    '专属客服支持',
-    '优先获取最新资源',
-    '无广告浏览体验',
-    '专属VIP标识',
-    '会员专属折扣',
-    '提前访问新功能'
-  ];
+  
 
   return (
     <div className="min-h-screen bg-background">
