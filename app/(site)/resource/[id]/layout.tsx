@@ -9,6 +9,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       return { title: '资源未找到', alternates: { canonical: `/resource/${params.id}` } }
     }
     const title = `${r.title} - 资源下载`
+    const twitterTitle = r.title
     const description = (r.content || '').replace(/\s+/g, ' ').slice(0, 160)
     const image = r.cover || '/logo.png'
     return {
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       },
       twitter: {
         card: 'summary_large_image',
-        title,
+        title: twitterTitle,
         description,
         images: [image],
       },
