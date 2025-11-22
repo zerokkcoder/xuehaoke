@@ -19,7 +19,7 @@ export async function GET(req: Request) {
       ? {
           OR: [
             { title: { contains: q } },
-            { content: { contains: q } },
+            // { content: { contains: q } },
           ],
         }
       : undefined
