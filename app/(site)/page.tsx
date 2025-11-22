@@ -196,15 +196,15 @@ function HomeInner() {
                 <div className="w-full animate-fadeIn flex flex-col items-center justify-center text-center">
                   <h1 className="text-3xl md:text-4xl font-bold mb-4">{siteConfig?.siteSubtitle || '骇课网，卷王必备的资源平台'}</h1>
                   <p className="text-base md:text-lg mb-4 opacity-90">{siteConfig?.siteSlogan || '海量优质资源，快速检索，一键下载'}</p>
-                  <form onSubmit={handleSearchSubmit} className="flex items-center justify-center w-full max-w-md mx-auto bg-white rounded-full shadow">
+                  <form onSubmit={handleSearchSubmit} className="flex items-center justify-center w-11/12 md:w-full md:max-w-md mx-auto bg-white rounded-full shadow">
                     <input
                       type="text"
                       placeholder="搜一下"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      className="flex-1 outline-none bg-transparent text-sm md:text-base text-foreground pl-5 md:pl-6"
+                      className="flex-1 outline-none bg-transparent text-sm md:text-base text-foreground pl-4 md:pl-6"
                     />
-                    <button type="submit" className="w-10 h-10 rounded-full bg-violet-500 text-white flex items-center justify-center hover:opacity-90" aria-label="搜索">
+                    <button type="submit" className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-violet-500 text-white flex items-center justify-center hover:opacity-90" aria-label="搜索">
                       <MagnifyingGlassIcon className="w-5 h-5" />
                     </button>
                   </form>
@@ -228,15 +228,15 @@ function HomeInner() {
             <div className="absolute inset-0 bg-black/25" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-full">
-                <form onSubmit={handleSearchSubmit} className="flex items-center justify-center w-full max-w-md mx-auto bg-white rounded-full shadow">
+                <form onSubmit={handleSearchSubmit} className="flex items-center justify-center w-11/12 md:w-full md:max-w-md mx-auto bg-white rounded-full shadow">
                   <input
                     type="text"
                     placeholder="搜一下"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="flex-1 outline-none bg-transparent text-sm md:text-base text-foreground pl-5 md:pl-6"
+                    className="flex-1 outline-none bg-transparent text-sm md:text-base text-foreground pl-4 md:pl-6"
                   />
-                  <button type="submit" className="w-10 h-10 rounded-full bg-violet-500 text-white flex items-center justify-center hover:opacity-90" aria-label="搜索">
+                  <button type="submit" className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-violet-500 text-white flex items-center justify-center hover:opacity-90" aria-label="搜索">
                     <MagnifyingGlassIcon className="w-5 h-5" />
                   </button>
                 </form>
@@ -264,9 +264,9 @@ function HomeInner() {
       <section className="mt-6">
         <div className="container mx-auto">
           {/* Resources Grid - Waterfall Layout */}
-          <div className="grid grid-auto-fit gap-4 md:gap-5">
+          <div className="grid grid-auto-fit gap-4 md:gap-5 justify-center md:justify-start">
             {displayedResources.map((resource, index) => (
-              <div key={resource.id} className="w-[240px] md:w-[280px]">
+              <div key={resource.id} className="w-[240px] md:w-[280px] mx-auto md:mx-0">
                 <ResourceCard 
                   resource={resource} 
                   index={index}
