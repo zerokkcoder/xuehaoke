@@ -33,6 +33,23 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     price,
   } = body
   try {
+    const current = await prisma.resource.findUnique({ where: { id: idNum }, select: { categoryId: true } })
+    const nextCategoryId = categoryId !== undefined ? Number(categoryId) : (current?.categoryId ?? undefined)
+
+    let nextSubcategoryId: number | null | undefined = undefined
+    if (subcategoryId === null) {
+      nextSubcategoryId = null
+    } else if (subcategoryId !== undefined) {
+      const subIdNum = Number(subcategoryId)
+      if (!Number.isFinite(subIdNum) || subIdNum <= 0) {
+        nextSubcategoryId = null
+      } else {
+        const sub = await prisma.subcategory.findUnique({ where: { id: subIdNum }, select: { id: true, categoryId: true } })
+        nextSubcategoryId = (sub && nextCategoryId && sub.categoryId === Number(nextCategoryId)) ? subIdNum : null
+      }
+    } else if (categoryId !== undefined) {
+      nextSubcategoryId = null
+    }
     // tags
     let tagIds: number[] | undefined
     if (Array.isArray(tags)) {
@@ -60,7 +77,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         viewCount: viewCount !== undefined ? Number(viewCount) : undefined,
         hotScore: hotScore !== undefined ? Number(hotScore) : undefined,
         categoryId: categoryId !== undefined ? Number(categoryId) : undefined,
-        subcategoryId: subcategoryId !== undefined ? (subcategoryId ? Number(subcategoryId) : null) : undefined,
+        subcategoryId: nextSubcategoryId,
         // set tags via upsert by replacing join table
         ...(tagIds ? { tags: { deleteMany: {}, create: tagIds.map(id => ({ tagId: id })) } } : {}),
         // downloads: maintain single record; update or create

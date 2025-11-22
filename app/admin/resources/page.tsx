@@ -127,9 +127,14 @@ export default function AdminResourcesPage() {
   useEffect(() => { fetchList(); fetchCats() }, [])
 
   useEffect(() => {
+    setSubcategoryId('')
     if (categoryId && typeof categoryId === 'number') fetchSubs(categoryId)
     else setSubs([])
   }, [categoryId])
+
+  useEffect(() => {
+    if (!subs.length) setSubcategoryId('')
+  }, [subs])
 
   const openCreate = () => {
     setIsEditing(false); setEditingId(null)
