@@ -51,29 +51,26 @@ function renderMd(md: string) {
   return html
 }
 
+function MarkdownEditor({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const mdParser = useMemo(() => new MarkdownIt(), [])
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <textarea
+        className="input w-full h-[360px] resize-vertical"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="在此输入 Markdown 内容"
+      />
+      <div
+        className="prose max-w-none p-3 rounded border bg-background overflow-auto h-[360px]"
+        dangerouslySetInnerHTML={{ __html: mdParser.render(value || '') }}
+      />
+    </div>
+  )
+}
+
 export default function AdminResourcesPage() {
   const { toast } = useToast()
-  const mdParser = useMemo(() => new MarkdownIt(), [])
-
-  // 极简 Markdown 编辑器：左侧输入，右侧预览
-  const MarkdownEditor = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
-    const [text, setText] = useState<string>(value || '')
-    useEffect(() => { setText(value || '') }, [value])
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <textarea
-          className="input w-full h-[360px] resize-vertical"
-          value={text}
-          onChange={(e) => { const t = e.target.value; setText(t); onChange(t) }}
-          placeholder="在此输入 Markdown 内容"
-        />
-        <div
-          className="prose max-w-none p-3 rounded border bg-background overflow-auto h-[360px]"
-          dangerouslySetInnerHTML={{ __html: mdParser.render(text) }}
-        />
-      </div>
-    )
-  }
   const [list, setList] = useState<ResItem[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -408,7 +405,7 @@ export default function AdminResourcesPage() {
             </div>
             <div className="mt-2">
               {/* 动态引入 Markdown 富文本编辑器 */}
-              <MarkdownEditor key={editingId ?? (modalOpen ? 'create' : 'closed')} value={content} onChange={(v) => { contentRef.current = v }} />
+              <MarkdownEditor key={editingId ?? (modalOpen ? 'create' : 'closed')} value={content} onChange={(v) => { setContent(v); contentRef.current = v }} />
             </div>
           </div>
 
