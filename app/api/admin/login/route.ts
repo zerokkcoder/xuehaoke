@@ -7,15 +7,6 @@ export async function POST(req: Request) {
   try {
     const hdrs = (req as any).headers
     const proto = hdrs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
-    const host = hdrs.get('x-forwarded-host') || hdrs.get('host') || new URL((req as any).url).host
-    const origin = String(hdrs.get('origin') || '')
-    if (origin) {
-      let originHost = ''
-      try { originHost = new URL(origin).host } catch {}
-      if (originHost && originHost.toLowerCase() !== String(host).toLowerCase()) {
-        return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
-      }
-    }
     const { username, password, remember } = await req.json()
     if (!username || !password) {
       return NextResponse.json({ success: false, message: '缺少用户名或密码' }, { status: 400 })
