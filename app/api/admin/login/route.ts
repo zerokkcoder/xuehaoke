@@ -9,9 +9,12 @@ export async function POST(req: Request) {
     const proto = hdrs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     const host = hdrs.get('x-forwarded-host') || hdrs.get('host') || new URL((req as any).url).host
     const origin = String(hdrs.get('origin') || '')
-    const expected = `${proto}://${host}`
-    if (origin && !origin.toLowerCase().startsWith(expected.toLowerCase())) {
-      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
+    if (origin) {
+      let originHost = ''
+      try { originHost = new URL(origin).host } catch {}
+      if (originHost && originHost.toLowerCase() !== String(host).toLowerCase()) {
+        return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
+      }
     }
     const { username, password, remember } = await req.json()
     if (!username || !password) {
