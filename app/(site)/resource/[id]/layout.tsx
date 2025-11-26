@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma'
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const idNum = Number(params.id)
   try {
-    const r = await prisma.resource.findUnique({ where: { id: idNum }, select: { title: true, content: true, cover: true } })
+    const r = await prisma.resource.findUnique({ where: { id: idNum }, select: { title: true, content: true, cover: true, category: { select: { name: true } }, subcategory: { select: { name: true } } } })
     if (!r) {
       return { title: '资源未找到', alternates: { canonical: `/resource/${params.id}` } }
     }
@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     return {
       title,
       description,
+      keywords: [r.title, r.category?.name || '', r.subcategory?.name || ''].filter(Boolean),
       alternates: { canonical: `/resource/${params.id}` },
       openGraph: {
         title: twitterTitle,

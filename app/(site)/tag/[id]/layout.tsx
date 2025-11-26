@@ -11,9 +11,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     return {
       title,
       description,
+      keywords: [name],
       alternates: { canonical: `/tag/${params.id}` },
-      openGraph: { title, description, type: 'website', locale: 'zh_CN' },
-      twitter: { card: 'summary', title, description },
+      openGraph: { title: name, description, type: 'website', locale: 'zh_CN' },
+      twitter: { card: 'summary', title: name, description },
     }
   } catch {
     return { title: '标签', alternates: { canonical: `/tag/${params.id}` } }
