@@ -67,5 +67,5 @@ export async function GET(req: Request) {
     `${entries.join('\n')}\n`+
     `</urlset>`
 
-  return new NextResponse(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8' } })
+  return new NextResponse(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'max-age=300, s-maxage=300' } })
 }

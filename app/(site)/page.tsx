@@ -187,6 +187,7 @@ function HomeInner() {
               src={siteConfig?.heroImage || "/haike_hero.svg"}
               alt="Hero"
               fill
+              sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover"
               priority
             />
@@ -222,6 +223,7 @@ function HomeInner() {
               src={siteConfig?.heroImage || "/haike_hero.svg"}
               alt="Search Header"
               fill
+              sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover"
               priority
             />

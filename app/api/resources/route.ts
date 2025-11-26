@@ -41,7 +41,9 @@ export async function GET(req: Request) {
         : [{ id: 'desc' as const }]
 
     // Debug log: observe incoming requests and parameters during development
-    console.log(`[API /resources] page=${page} size=${size} q="${q}" categoryId=${categoryId ?? ''} subcategoryId=${subcategoryId ?? ''} tagId=${tagId ?? ''} sort=${sortParam}`) // eslint-disable-line no-console
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[API /resources] page=${page} size=${size} q="${q}" categoryId=${categoryId ?? ''} subcategoryId=${subcategoryId ?? ''} tagId=${tagId ?? ''} sort=${sortParam}`)
+    }
 
     const [total, rows] = await Promise.all([
       prisma.resource.count({ where: finalWhere }),

@@ -22,12 +22,14 @@ export async function generateMetadata(): Promise<Metadata> {
     const title = (r?.site_name ? `${r.site_name} - 专业资源下载平台` : '骇课网 - 专业资源下载平台')
     const description = r?.site_description || "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。"
     const keywords = r?.site_keywords || "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计"
-    return { title, description, keywords }
+    return { title, description, keywords, viewport: { width: 'device-width', initialScale: 1, maximumScale: 1 }, themeColor: '#ffffff' }
   } catch {
     return {
       title: "骇课网 - 专业资源下载平台",
       description: "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。",
       keywords: "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计",
+      viewport: { width: 'device-width', initialScale: 1, maximumScale: 1 },
+      themeColor: '#ffffff',
     }
   }
 }

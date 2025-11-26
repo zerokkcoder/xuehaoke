@@ -10,5 +10,5 @@ export async function GET(req: Request) {
 Allow: /
 Disallow: /admin/
 Sitemap: ${origin}/sitemap.xml`
-  return new NextResponse(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
+  return new NextResponse(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'max-age=300, s-maxage=300' } })
 }

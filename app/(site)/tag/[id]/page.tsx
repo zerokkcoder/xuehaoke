@@ -132,6 +132,7 @@ export default function TagPage() {
               src={siteConfig?.heroImage || "/haike_hero.svg"}
               alt="Tag Hero"
               fill
+              sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover"
               priority
             />
