@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import prisma from '@/lib/prisma'
+import { headers } from 'next/headers'
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const idNum = Number(params.id)
@@ -51,9 +52,14 @@ export default async function ResourceLayout(props: any) {
     site = sr ? { siteName: sr.site_name || null, siteLogo: sr.site_logo || null } : null
   } catch {}
 
+  const hs = await headers()
+  const proto = hs.get('x-forwarded-proto') || 'https'
+  const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+  const origin = host ? `${proto}://${host}` : 'https://example.com'
   const name = r?.title || '资源详情'
   const description = (r?.content || '').replace(/\s+/g, ' ').slice(0, 160)
-  const image = r?.cover || site?.siteLogo || '/logo.png'
+  const imageRaw = r?.cover || site?.siteLogo || '/logo.png'
+  const image = imageRaw.startsWith('http') ? imageRaw : `${origin}${imageRaw}`
   const price = Number(r?.price || 0).toFixed(2)
   const brandName = site?.siteName || '骇课网'
   const jsonLd = {
@@ -69,7 +75,7 @@ export default async function ResourceLayout(props: any) {
       priceCurrency: 'CNY',
       price,
       availability: 'https://schema.org/InStock',
-      url: `/resource/${params.id}`,
+      url: `${origin}/resource/${params.id}`,
     },
   }
 
