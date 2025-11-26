@@ -18,9 +18,7 @@ export default function AdminPage() {
     latestResources: { id: number; title: string; price: any; createdAt: string }[]
   } | null>(null)
 
-  // 客户端守卫（与中间件双保险）：兼容旧的 localStorage.adminToken
   useEffect(() => {
-    // 客户端状态展示：调用 /api/admin/me
     const loadMe = async () => {
       try {
         const res = await fetch('/api/admin/me', { credentials: 'same-origin', cache: 'no-store' })

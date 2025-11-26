@@ -39,7 +39,6 @@ function Modal({ open, title, children, onClose }: { open: boolean; title: strin
 }
 
 function renderMd(md: string) {
-  // 极简 Markdown 渲染（支持 **bold**、*italic*、# 标题、[text](url)）
   let html = md
   html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>')
   html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>')
@@ -83,17 +82,15 @@ export default function AdminResourcesPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
 
-  // form states
   const [cover, setCover] = useState('')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [price, setPrice] = useState<number | ''>('')
   const contentRef = useRef<string>('')
   const [mdPreview, setMdPreview] = useState(false)
-  // 已移除：下载量/浏览量/热门指数
   const [categoryId, setCategoryId] = useState<number | ''>('')
   const [subcategoryId, setSubcategoryId] = useState<number | ''>('')
-  const [tagsInput, setTagsInput] = useState('') // 逗号分隔
+  const [tagsInput, setTagsInput] = useState('')
   const [dlUrl, setDlUrl] = useState('')
   const [dlCode, setDlCode] = useState('')
 
@@ -140,7 +137,6 @@ export default function AdminResourcesPage() {
     setIsEditing(false); setEditingId(null)
     setCover(''); setTitle(''); setContent(''); setMdPreview(false)
     contentRef.current = ''
-    // 已移除字段不再初始化
     setCategoryId(''); setSubcategoryId(''); setTagsInput('')
     setPrice('');
     setDlUrl(''); setDlCode(''); setModalOpen(true)
@@ -153,7 +149,6 @@ export default function AdminResourcesPage() {
     setContent(r.content)
     setMdPreview(false)
     contentRef.current = r.content
-    // 已移除字段不再编辑
     setCategoryId(r.category?.id || '')
     setSubcategoryId(r.subcategory?.id || '')
     setTagsInput(r.tags.map(t => t.name).join(','))
@@ -169,7 +164,6 @@ export default function AdminResourcesPage() {
       cover: cover || null,
       title, content: contentRef.current,
       price: price === '' ? 0 : Number(price),
-      // 不提交下载量/浏览量/热门指数
       categoryId: typeof categoryId === 'number' ? categoryId : undefined,
       subcategoryId: typeof subcategoryId === 'number' ? subcategoryId : null,
       tags: tagsInput.split(',').map(s => s.trim()).filter(Boolean),
@@ -250,7 +244,6 @@ export default function AdminResourcesPage() {
         </div>
       </div>
 
-      {/* Pagination */}
       <div className="flex items-center justify-between bg-card rounded-md shadow-sm p-3">
         <div className="text-sm text-muted-foreground">共 {total} 条，页大小
           <select
@@ -269,10 +262,8 @@ export default function AdminResourcesPage() {
         </div>
       </div>
 
-      {/* 新增/编辑弹窗 */}
       <Modal open={modalOpen} title={isEditing ? '编辑资源' : '新增资源'} onClose={() => setModalOpen(false)}>
         <div className="space-y-4">
-          {/* 封面上传：单独一行，放在标题之上 */}
           <div>
             <label className="text-xs text-muted-foreground">封面上传</label>
             <div className="flex items-center gap-3 mt-2">
@@ -291,7 +282,6 @@ export default function AdminResourcesPage() {
                   if (!allowed.includes(file.type)) { toast('仅支持 png/jpg/webp', 'error'); return }
                   const prevCover = cover
                   if (file.size > 2 * 1024 * 1024) {
-                    // 简单压缩：使用 canvas 降采样与质量压缩
                     const bitmap = await createImageBitmap(file)
                     const maxW = 1280, maxH = 1280
                     let { width, height } = bitmap
@@ -302,7 +292,7 @@ export default function AdminResourcesPage() {
                     canvas.width = targetW; canvas.height = targetH
                     const ctx = canvas.getContext('2d')!
                     ctx.drawImage(bitmap, 0, 0, targetW, targetH)
-                    const outType = file.type // 保持原类型
+                    const outType = file.type
                     const quality = outType === 'image/jpeg' || outType === 'image/webp' ? 0.8 : undefined
                     const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, outType, quality))
                     if (!blob) { toast('压缩失败', 'error'); return }
@@ -372,7 +362,6 @@ export default function AdminResourcesPage() {
               <label className="text-xs text-muted-foreground">价格</label>
               <input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} className="input w-full" />
             </div>
-            
             <div>
               <label className="text-xs text-muted-foreground">一级分类</label>
               <select value={categoryId} onChange={(e) => setCategoryId(e.target.value === '' ? '' : Number(e.target.value))} className="input w-full">
@@ -409,7 +398,6 @@ export default function AdminResourcesPage() {
               </div>
             </div>
             <div className="mt-2">
-              {/* 动态引入 Markdown 富文本编辑器 */}
               <MarkdownEditor key={editingId ?? (modalOpen ? 'create' : 'closed')} value={content} onChange={(v) => { setContent(v); contentRef.current = v }} />
             </div>
           </div>
@@ -421,7 +409,6 @@ export default function AdminResourcesPage() {
         </div>
       </Modal>
 
-      {/* 删除二次确认 */}
       <ConfirmDialog
         open={delId !== null && delStep === 1}
         title="删除资源"
@@ -439,9 +426,11 @@ export default function AdminResourcesPage() {
         cancelText="返回"
         onConfirm={async () => {
           if (delId == null) return
-          await fetch(`/api/admin/resources/${delId}`, { method: 'DELETE' })
-          setDelId(null); setDelStep(0)
-          fetchList()
+          const res = await fetch(`/api/admin/resources/${delId}`, { method: 'DELETE' })
+          const data = await res.json().catch(() => ({}))
+          if (data?.success) {
+            setDelId(null); setDelStep(0); fetchList()
+          }
         }}
         onCancel={() => setDelStep(1)}
       />

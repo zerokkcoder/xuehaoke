@@ -89,9 +89,8 @@ export default function AdminPlansPage() {
         <button className="btn btn-primary" onClick={() => { setCreateFeaturesText(featureStr(createPlan.features)); setCreateOpen(true) }}>新增计划</button>
       </div>
 
-      {/* 新增弹窗 */}
       {createOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg黑/40 flex items-center justify-center z-50 p-4">
           <div className="bg-card border border-border rounded-lg max-w-lg w-full p-6 text-foreground">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">新增会员计划</h3>
@@ -133,7 +132,6 @@ export default function AdminPlansPage() {
         </div>
       )}
 
-      {/* List */}
       <div className="bg-card rounded-lg shadow-sm">
         <div className="p-4 overflow-x-auto">
           {loading ? (
@@ -176,9 +174,8 @@ export default function AdminPlansPage() {
         </div>
       </div>
 
-      {/* 编辑弹窗 */}
       {editingId !== null && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg黑/40 flex items-center justify-center z-50 p-4">
           <div className="bg-card border border-border rounded-lg max-w-lg w-full p-6 text-foreground">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">编辑会员计划</h3>
@@ -220,7 +217,6 @@ export default function AdminPlansPage() {
         </div>
       )}
 
-      {/* 删除确认弹窗 */}
       <ConfirmDialog
         open={delId !== null}
         title="删除会员计划"

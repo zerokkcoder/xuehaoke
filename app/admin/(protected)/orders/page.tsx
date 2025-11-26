@@ -182,11 +182,10 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between bg-card rounded-md shadow-sm p-3">
+      <div className="flex items中心 justify-between bg-card rounded-md shadow-sm p-3">
         <div className="text-sm text-muted-foreground">共 {total} 条，页大小
           <select
-            className="input ml-2 text-center px-1"
+            className="input ml-2 text中心 px-1"
             style={{ width: 64, display: 'inline-block', paddingLeft: 4, paddingRight: 4 }}
             value={size}
             onChange={(e) => { const s = Number(e.target.value); setSize(s); fetchList(1, s, q, status) }}

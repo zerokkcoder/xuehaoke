@@ -101,7 +101,6 @@ export default function AdminCategoriesPage() {
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-foreground">分类管理</h2>
 
-      {/* Add form */}
       <div className="bg-card rounded-lg shadow-sm p-4 flex gap-2">
         <input
           value={name}
@@ -119,7 +118,6 @@ export default function AdminCategoriesPage() {
         <button onClick={addCategory} className="btn btn-primary">新增</button>
       </div>
 
-      {/* List */}
       <div className="bg-card rounded-lg shadow-sm">
         <div className="p-4 overflow-x-auto">
           {loading ? (
@@ -244,7 +242,6 @@ export default function AdminCategoriesPage() {
           } catch {}
           if (!ok) {
             toast(msg || '该分类或其子分类存在关联资源，禁止删除', 'error')
-            // 自动取消确认弹窗
             setDelId(null)
             return
           }
@@ -255,7 +252,6 @@ export default function AdminCategoriesPage() {
         onCancel={() => setDelId(null)}
       />
 
-      {/* 子分类删除双重确认：第一步 */}
       <ConfirmDialog
         open={subDelId !== null && subDelStep === 1}
         title="删除子分类"
@@ -265,7 +261,6 @@ export default function AdminCategoriesPage() {
         onConfirm={() => setSubDelStep(2)}
         onCancel={() => { setSubDelId(null); setSubDelStep(0) }}
       />
-      {/* 子分类删除双重确认：第二步 */}
       <ConfirmDialog
         open={subDelId !== null && subDelStep === 2}
         title="再次确认"
@@ -284,7 +279,6 @@ export default function AdminCategoriesPage() {
           } catch {}
           if (!ok) {
             toast(msg || '该子分类存在关联资源，禁止删除', 'error')
-            // 自动取消二次确认弹窗
             setSubDelId(null)
             setSubDelStep(0)
             return

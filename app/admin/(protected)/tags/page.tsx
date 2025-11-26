@@ -92,7 +92,6 @@ export default function AdminTagsPage() {
         </div>
       </div>
 
-      {/* Pagination */}
       <div className="flex items-center justify-between bg-card rounded-md shadow-sm p-3">
         <div className="text-sm text-muted-foreground">共 {total} 条，页大小
           <select
@@ -111,7 +110,6 @@ export default function AdminTagsPage() {
         </div>
       </div>
 
-      {/* 编辑操作不使用 Toast 通知 */}
     </div>
   )
 }

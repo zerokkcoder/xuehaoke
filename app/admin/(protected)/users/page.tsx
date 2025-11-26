@@ -88,7 +88,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify之间">
         <h2 className="text-xl font-semibold text-foreground">用户管理</h2>
         <div className="flex items-center gap-2">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索用户名/邮箱" className="input flex-1" />
@@ -96,7 +96,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Create Form */}
       <div className="bg-card rounded-lg shadow-sm p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
         <input value={createUser.username} onChange={(e) => setCreateUser(prev => ({ ...prev, username: e.target.value }))} placeholder="用户名" className="input" />
         <input value={createUser.email} onChange={(e) => setCreateUser(prev => ({ ...prev, email: e.target.value }))} placeholder="邮箱" className="input" />
@@ -105,7 +104,6 @@ export default function AdminUsersPage() {
         <button className="btn btn-primary" onClick={createNew}>新增用户</button>
       </div>
 
-      {/* List */}
       <div className="bg-card rounded-lg shadow-sm">
         <div className="p-4 overflow-x-auto">
           {loading ? (
@@ -170,7 +168,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* 删除确认弹窗 */}
       <ConfirmDialog
         open={delId !== null}
         title="删除用户"
@@ -181,7 +178,6 @@ export default function AdminUsersPage() {
         onCancel={() => setDelId(null)}
       />
 
-      {/* Pagination */}
       <div className="flex items-center justify-between bg-card rounded-md shadow-sm p-3">
         <div className="text-sm text-muted-foreground">共 {total} 条，页大小
           <select

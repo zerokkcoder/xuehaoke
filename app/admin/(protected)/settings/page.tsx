@@ -97,7 +97,6 @@ export default function AdminSettingsPage() {
     if (!settings) return
     setSaving(true)
     setMessage('')
-    // client-side required validation
     const pub = (settings.alipayPublicKey || '').trim()
     if (!pub) {
       setErrors(prev => ({ ...prev, alipayPublicKey: '请填写支付宝公钥' }))
@@ -115,7 +114,6 @@ export default function AdminSettingsPage() {
       if (res.ok && json?.success) {
         setSettings(json.data)
         setMessage('保存成功')
-        // 保存后重载页面，确保各处（含服务端渲染）读取到最新站点设置
         setTimeout(() => {
           try { window.location.reload() } catch {}
         }, 300)
