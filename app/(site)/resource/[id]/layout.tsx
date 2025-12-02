@@ -7,21 +7,32 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   try {
     const r = await prisma.resource.findUnique({ where: { id: idNum }, select: { title: true, content: true, cover: true, category: { select: { name: true } }, subcategory: { select: { name: true } } } })
     if (!r) {
-      return { title: '资源未找到', alternates: { canonical: `/resource/${params.id}` } }
+      const hs = await headers()
+      const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+      const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+      const origin = host ? `${proto}://${host}` : 'https://example.com'
+      return { title: '资源未找到', alternates: { canonical: `${origin}/resource/${params.id}` }, robots: { index: true, follow: true } }
     }
+    const hs = await headers()
+    const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+    const origin = host ? `${proto}://${host}` : 'https://example.com'
     const title = `${r.title} - 资源下载`
     const twitterTitle = r.title
     const description = (r.content || '').replace(/\s+/g, ' ').slice(0, 160)
-    const image = r.cover || '/logo.png'
+    const imageRaw = r.cover || '/logo.png'
+    const image = imageRaw.startsWith('http') ? imageRaw : `${origin}${imageRaw}`
     return {
       title,
       description,
       keywords: [r.title, r.category?.name || '', r.subcategory?.name || ''].filter(Boolean),
-      alternates: { canonical: `/resource/${params.id}` },
+      alternates: { canonical: `${origin}/resource/${params.id}` },
+      robots: { index: true, follow: true },
       openGraph: {
         title: twitterTitle,
         description,
         images: [{ url: image }],
+        url: `${origin}/resource/${params.id}`,
         type: 'article',
         locale: 'zh_CN',
       },
@@ -33,7 +44,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       },
     }
   } catch {
-    return { title: '资源详情', alternates: { canonical: `/resource/${params.id}` } }
+    const hs = await headers()
+    const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+    const origin = host ? `${proto}://${host}` : 'https://example.com'
+    return { title: '资源详情', alternates: { canonical: `${origin}/resource/${params.id}` }, robots: { index: true, follow: true } }
   }
 }
 
