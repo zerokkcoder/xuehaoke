@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 
 export function middleware(req: NextRequest) {
-  const nonce = crypto.randomBytes(16).toString('base64')
+  const nonce = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)).replace(/-/g, '')
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set('x-nonce', nonce)
 
