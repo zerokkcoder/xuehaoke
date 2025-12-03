@@ -68,6 +68,7 @@ export default async function ResourceLayout(props: any) {
   } catch {}
 
   const hs = await headers()
+  const nonce = hs.get('x-nonce') || undefined
   const proto = hs.get('x-forwarded-proto') || 'https'
   const host = hs.get('x-forwarded-host') || hs.get('host') || ''
   const origin = host ? `${proto}://${host}` : 'https://example.com'
@@ -96,7 +97,7 @@ export default async function ResourceLayout(props: any) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {children}
     </>
   )

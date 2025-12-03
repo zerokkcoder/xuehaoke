@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
+import { headers } from "next/headers";
 // Root layout: keep minimal to allow route groups to define their own layouts
 
 const geistSans = Geist({
@@ -44,11 +45,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const hs = headers()
+  const nonce = hs.get('x-nonce') || undefined
   return (
     <html lang="zh">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
         <script
           type="application/ld+json"
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
