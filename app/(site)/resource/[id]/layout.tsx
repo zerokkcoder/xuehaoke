@@ -2,8 +2,9 @@ import type { Metadata } from 'next'
 import prisma from '@/lib/prisma'
 import { headers } from 'next/headers'
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const idNum = Number(params.id)
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const idNum = Number(id)
   try {
     const r = await prisma.resource.findUnique({ where: { id: idNum }, select: { title: true, content: true, cover: true, category: { select: { name: true } }, subcategory: { select: { name: true } } } })
     if (!r) {
@@ -11,7 +12,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
       const host = hs.get('x-forwarded-host') || hs.get('host') || ''
       const origin = host ? `${proto}://${host}` : 'https://example.com'
-      return { title: '资源未找到', alternates: { canonical: `${origin}/resource/${params.id}` }, robots: { index: true, follow: true } }
+      return { title: '资源未找到', alternates: { canonical: `${origin}/resource/${id}` }, robots: { index: true, follow: true } }
     }
     const hs = await headers()
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
@@ -26,13 +27,13 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       title,
       description,
       keywords: [r.title, r.category?.name || '', r.subcategory?.name || ''].filter(Boolean),
-      alternates: { canonical: `${origin}/resource/${params.id}` },
+      alternates: { canonical: `${origin}/resource/${id}` },
       robots: { index: true, follow: true },
       openGraph: {
         title: twitterTitle,
         description,
         images: [{ url: image }],
-        url: `${origin}/resource/${params.id}`,
+        url: `${origin}/resource/${id}`,
         type: 'article',
         locale: 'zh_CN',
       },
@@ -48,7 +49,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     const host = hs.get('x-forwarded-host') || hs.get('host') || ''
     const origin = host ? `${proto}://${host}` : 'https://example.com'
-    return { title: '资源详情', alternates: { canonical: `${origin}/resource/${params.id}` }, robots: { index: true, follow: true } }
+    const { id: id2 } = await params
+    return { title: '资源详情', alternates: { canonical: `${origin}/resource/${id2}` }, robots: { index: true, follow: true } }
   }
 }
 
@@ -56,7 +58,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function ResourceLayout(props: any) {
   const { children, params } = props
-  const idNum = Number(params?.id)
+  const { id } = await params
+  const idNum = Number(id)
   let r: { title: string; content: string; cover: string | null; price: any } | null = null
   let site: { siteName: string | null; siteLogo: string | null } | null = null
   try {
@@ -93,13 +96,13 @@ export default async function ResourceLayout(props: any) {
       priceCurrency: 'CNY',
       price,
       availability: 'https://schema.org/InStock',
-      url: `${origin}/resource/${params.id}`,
+      url: `${origin}/resource/${id}`,
     },
   }
 
   return (
     <>
-      <script type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {children}
     </>
   )

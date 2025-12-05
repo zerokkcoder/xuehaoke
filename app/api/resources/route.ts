@@ -11,6 +11,9 @@ export async function GET(req: Request) {
     const categoryIdParam = url.searchParams.get('categoryId')
     const subcategoryIdParam = url.searchParams.get('subcategoryId')
     const tagIdParam = url.searchParams.get('tagId')
+    const categorySlug = (url.searchParams.get('categorySlug') || '').trim()
+    const subcategorySlug = (url.searchParams.get('subcategorySlug') || '').trim()
+    const tagSlug = (url.searchParams.get('tagSlug') || '').trim()
     const sortParam = (url.searchParams.get('sort') || 'latest').trim()
     const categoryId = categoryIdParam ? Number(categoryIdParam) : undefined
     const subcategoryId = subcategoryIdParam ? Number(subcategoryIdParam) : undefined
@@ -29,6 +32,9 @@ export async function GET(req: Request) {
     if (Number.isFinite(categoryId)) finalWhere.categoryId = Number(categoryId)
     if (Number.isFinite(subcategoryId)) finalWhere.subcategoryId = Number(subcategoryId)
     if (Number.isFinite(tagId)) finalWhere.tags = { some: { tagId: Number(tagId) } }
+    if (categorySlug) finalWhere.category = { is: { slug: categorySlug } }
+    if (subcategorySlug) finalWhere.subcategory = { is: { slug: subcategorySlug } }
+    if (tagSlug) finalWhere.tags = { some: { tag: { slug: tagSlug } } }
 
     // 排序：latest(默认) / downloads / views / comments
     const orderBy =
@@ -42,7 +48,7 @@ export async function GET(req: Request) {
 
     // Debug log: observe incoming requests and parameters during development
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[API /resources] page=${page} size=${size} q="${q}" categoryId=${categoryId ?? ''} subcategoryId=${subcategoryId ?? ''} tagId=${tagId ?? ''} sort=${sortParam}`)
+      console.log(`[API /resources] page=${page} size=${size} q="${q}" categoryId=${categoryId ?? ''} subcategoryId=${subcategoryId ?? ''} tagId=${tagId ?? ''} categorySlug=${categorySlug} subcategorySlug=${subcategorySlug} tagSlug=${tagSlug} sort=${sortParam}`)
     }
 
     const [total, rows] = await Promise.all([
@@ -56,8 +62,8 @@ export async function GET(req: Request) {
           subcategoryId: true,
           title: true,
           cover: true,
-          category: { select: { name: true } },
-          subcategory: { select: { name: true } },
+          category: { select: { name: true, slug: true } },
+          subcategory: { select: { name: true, slug: true } },
         },
         skip,
         take: size,
@@ -72,6 +78,8 @@ export async function GET(req: Request) {
       subcategoryName: r.subcategory?.name || '',
       categoryId: r.categoryId,
       subcategoryId: r.subcategoryId,
+      categorySlug: (r.category as any)?.slug || null,
+      subcategorySlug: (r.subcategory as any)?.slug || null,
     }))
 
     return NextResponse.json({ success: true, data, pagination: { page, size, total } })

@@ -8,8 +8,8 @@ type ResourceCardData = {
   coverImage: string
   title: string
   category: string
-  categoryId?: number
-  subcategoryId?: number
+  categorySlug?: string | null
+  subcategorySlug?: string | null
 }
 
 interface ResourceCardProps {
@@ -36,9 +36,9 @@ export default function ResourceCard({ resource, index = 0 }: ResourceCardProps)
           />
         </Link>
         <div className="h-1/3 pl-3 pt-3 flex flex-col justify-start gap-1">
-          {resource.categoryId ? (
+          {resource.categorySlug ? (
             <Link
-              href={resource.subcategoryId ? `/category/${resource.categoryId}/${resource.subcategoryId}` : `/category/${resource.categoryId}`}
+              href={resource.subcategorySlug ? `/category/${resource.categorySlug}/${resource.subcategorySlug}` : `/category/${resource.categorySlug}`}
               className="flex items-center text-xs md:text-sm text-muted-foreground hover:text-violet-500"
             >
               <span className="inline-block w-1.5 h-1.5 rounded-full border border-red-500 mr-2"></span>

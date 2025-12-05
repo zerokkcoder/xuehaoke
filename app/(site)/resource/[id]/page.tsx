@@ -26,7 +26,7 @@ export default function ResourceDetailPage() {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [prevNext, setPrevNext] = useState<{ prev: { id: number; title: string } | null; next: { id: number; title: string } | null }>({ prev: null, next: null })
-  const [hotTags, setHotTags] = useState<{ id: number; name: string }[]>([])
+  const [hotTags, setHotTags] = useState<{ id: number; name: string; slug?: string | null }[]>([])
   const [latestArticles, setLatestArticles] = useState<{ id: number; title: string }[]>([])
   const [guessList, setGuessList] = useState<{ id: number; title: string; coverImage: string; category: string }[]>([])
   const [hasAccess, setHasAccess] = useState(false)
@@ -48,14 +48,16 @@ export default function ResourceDetailPage() {
           title: r.title,
           category: r.category?.name || '其他',
           categoryId: r.category?.id || null,
+          categorySlug: (r.category as any)?.slug || null,
           subcategory: r.subcategory?.name || '',
           subcategoryId: r.subcategory?.id || null,
+          subcategorySlug: (r.subcategory as any)?.slug || null,
           description: r.content || '',
           coverImage: r.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&h=600&fit=crop',
           downloadUrl: firstDl?.url || '',
           downloadCode: firstDl?.code || '',
           price: Number(r.price || 0),
-          tags: Array.isArray(r.tags) ? r.tags.map((t: any) => ({ id: Number(t?.id ?? t?.tagId), name: String(t?.name ?? t?.tag?.name ?? '') })) : [],
+          tags: Array.isArray(r.tags) ? r.tags.map((t: any) => ({ id: Number(t?.id ?? t?.tagId), name: String(t?.name ?? t?.tag?.name ?? ''), slug: String((t?.slug ?? t?.tag?.slug) || '') || null })) : [],
           isNew: false,
           isPopular: false,
           isVipOnly: false,
@@ -187,14 +189,16 @@ export default function ResourceDetailPage() {
         title: r.title,
         category: r.category?.name || '其他',
         categoryId: r.category?.id || null,
+        categorySlug: (r.category as any)?.slug || null,
         subcategory: r.subcategory?.name || '',
         subcategoryId: r.subcategory?.id || null,
+        subcategorySlug: (r.subcategory as any)?.slug || null,
         description: r.content || '',
         coverImage: r.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&h=600&fit=crop',
         downloadUrl: firstDl?.url || '',
         downloadCode: firstDl?.code || '',
         price: Number(r.price || 0),
-        tags: Array.isArray(r.tags) ? r.tags.map((t: any) => ({ id: Number(t?.id ?? t?.tagId), name: String(t?.name ?? t?.tag?.name ?? '') })) : [],
+        tags: Array.isArray(r.tags) ? r.tags.map((t: any) => ({ id: Number(t?.id ?? t?.tagId), name: String(t?.name ?? t?.tag?.name ?? ''), slug: String((t?.slug ?? t?.tag?.slug) || '') || null })) : [],
         isNew: false,
         isPopular: false,
         isVipOnly: false,
@@ -273,15 +277,15 @@ export default function ResourceDetailPage() {
         <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
           <Link href="/" className="hover:text-primary">首页</Link>
           <span>/</span>
-          {resource.categoryId ? (
-            <Link href={`/category/${resource.categoryId}`} className="hover:text-primary">{resource.category || '未分类'}</Link>
+          {resource.categorySlug ? (
+            <Link href={`/category/${resource.categorySlug}`} className="hover:text-primary">{resource.category || '未分类'}</Link>
           ) : (
             <span className="text-muted-foreground">{resource.category || '未分类'}</span>
           )}
-          {resource.subcategoryId ? (
+          {resource.subcategorySlug ? (
             <>
               <span>/</span>
-              <Link href={`/category/${resource.categoryId}/${resource.subcategoryId}`} className="hover:text-primary">{resource.subcategory}</Link>
+              <Link href={`/category/${resource.categorySlug}/${resource.subcategorySlug}`} className="hover:text-primary">{resource.subcategory}</Link>
             </>
           ) : null}
           <span>/</span>
@@ -416,15 +420,25 @@ export default function ResourceDetailPage() {
               </div>
               {/* Tags inside card bottom */}
               <div className="flex flex-wrap items-center gap-2 mt-4">
-                {resource.tags.map((tag: { id: number; name: string }, index: number) => (
-                  <Link
-                    key={tag.id}
-                    href={`/tag/${tag.id}`}
-                    className="px-3 py-1 text-xs md:text-sm rounded-none text-white hover:opacity-90 cursor-pointer transition-colors"
-                    style={{ backgroundColor: tagColors[index % tagColors.length] }}
-                  >
-                    {tag.name}
-                  </Link>
+                {resource.tags.map((tag: { id: number; name: string; slug?: string | null }, index: number) => (
+                  tag.slug && !/^\d+$/.test(tag.slug) ? (
+                    <Link
+                      key={tag.id}
+                      href={`/tag/${tag.slug}`}
+                      className="px-3 py-1 text-xs md:text-sm rounded-none text-white hover:opacity-90 cursor-pointer transition-colors"
+                      style={{ backgroundColor: tagColors[index % tagColors.length] }}
+                    >
+                      {tag.name}
+                    </Link>
+                  ) : (
+                    <span
+                      key={tag.id}
+                      className="px-3 py-1 text-xs md:text-sm rounded-none text-white opacity-80"
+                      style={{ backgroundColor: tagColors[index % tagColors.length] }}
+                    >
+                      {tag.name}
+                    </span>
+                  )
                 ))}
               </div>
             </div>
@@ -531,14 +545,24 @@ export default function ResourceDetailPage() {
               <h3 className="text-lg font-semibold text-foreground mb-4">热门标签</h3>
               <div className="flex flex-wrap gap-2">
                 {hotTags.map((tag, idx) => (
-                  <Link
-                    key={tag.id}
-                    href={`/tag/${tag.id}`}
-                    className="px-3 py-1 text-xs md:text-sm rounded-none text-white hover:opacity-90"
-                    style={{ backgroundColor: tagColors[idx % tagColors.length] }}
-                  >
-                    {tag.name}
-                  </Link>
+                  tag.slug && !/^\d+$/.test(tag.slug) ? (
+                    <Link
+                      key={tag.id}
+                      href={`/tag/${tag.slug}`}
+                      className="px-3 py-1 text-xs md:text-sm rounded-none text-white hover:opacity-90"
+                      style={{ backgroundColor: tagColors[idx % tagColors.length] }}
+                    >
+                      {tag.name}
+                    </Link>
+                  ) : (
+                    <span
+                      key={tag.id}
+                      className="px-3 py-1 text-xs md:text-sm rounded-none text-white opacity-80"
+                      style={{ backgroundColor: tagColors[idx % tagColors.length] }}
+                    >
+                      {tag.name}
+                    </span>
+                  )
                 ))}
               </div>
             </div>

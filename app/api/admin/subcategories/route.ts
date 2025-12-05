@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import prisma from '@/lib/prisma'
+import pinyin from 'tiny-pinyin'
 
 // 使用 Prisma 管理子分类
 
@@ -29,25 +30,32 @@ export async function GET(req: Request) {
   return NextResponse.json({ success: true, data: rows })
 }
 
-function makeSlug(input: string) {
-  const base = String(input).trim().toLowerCase()
-  const s = base.replace(/\s+/g, '-').replace(/[^\w\-\u4e00-\u9fa5]/g, '')
-  return s || base
+function makeLatinSlug(input: string) {
+  const raw = String(input).trim()
+  const hasHan = /[\u4e00-\u9fa5]/.test(raw)
+  let latin = raw
+  try {
+    latin = hasHan ? pinyin.convertToPinyin(raw, '-', true) : raw
+  } catch {
+    latin = raw
+  }
+  latin = latin.toLowerCase()
+  latin = latin.replace(/\s+/g, '-')
+  latin = latin.replace(/[^a-z0-9\-]/g, '')
+  latin = latin.replace(/-+/g, '-').replace(/^-+|-+$/g, '')
+  return latin || 'subcategory'
 }
 
 export async function POST(req: Request) {
   const admin = verifyAdmin(req)
   if (!admin) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-  const { categoryId, name, sort, slug } = await req.json()
+  const { categoryId, name, sort } = await req.json()
   if (!categoryId || !name || String(name).trim() === '') {
     return NextResponse.json({ success: false, message: '参数错误' }, { status: 400 })
   }
-  if (slug == null || String(slug).trim() === '') {
-    return NextResponse.json({ success: false, message: 'Slug不能为空' }, { status: 400 })
-  }
   try {
     const sortNum = Number.isFinite(Number(sort)) ? Number(sort) : 0
-    const finalSlug = makeSlug(String(slug))
+    const finalSlug = makeLatinSlug(String(name))
     const dup = await (prisma as any).subcategory.findFirst({ where: { slug: finalSlug } })
     if (dup) return NextResponse.json({ success: false, message: 'Slug 已存在' }, { status: 400 })
     const created = await (prisma as any).subcategory.create({ data: { categoryId: Number(categoryId), name: String(name).trim(), slug: finalSlug, sort: sortNum } })

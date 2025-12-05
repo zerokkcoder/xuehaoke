@@ -19,10 +19,8 @@ export async function POST(req: Request) {
             id: true,
             title: true,
             cover: true,
-            categoryId: true,
-            subcategoryId: true,
-            category: { select: { name: true } },
-            subcategory: { select: { name: true } },
+            category: { select: { name: true, slug: true } },
+            subcategory: { select: { name: true, slug: true } },
           }
         }
       }
@@ -33,8 +31,8 @@ export async function POST(req: Request) {
       accessedAt: a.createdAt,
       title: a.resource?.title || '',
       cover: a.resource?.cover || null,
-      categoryId: a.resource?.categoryId || null,
-      subcategoryId: a.resource?.subcategoryId || null,
+      categorySlug: (a.resource?.category as any)?.slug || null,
+      subcategorySlug: (a.resource?.subcategory as any)?.slug || null,
       categoryName: a.resource?.category?.name || '',
       subcategoryName: a.resource?.subcategory?.name || '',
     }))

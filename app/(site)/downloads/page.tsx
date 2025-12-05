@@ -10,8 +10,8 @@ type DownloadItem = {
   accessedAt: string
   title: string
   cover: string | null
-  categoryId: number | null
-  subcategoryId: number | null
+  categorySlug: string | null
+  subcategorySlug: string | null
   categoryName: string
   subcategoryName: string
 }
@@ -130,8 +130,8 @@ export default function DownloadsPage() {
                   title: d.title,
                   coverImage: d.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&h=600&fit=crop',
                   category: d.subcategoryName || d.categoryName || '其他',
-                  categoryId: d.categoryId || undefined,
-                  subcategoryId: d.subcategoryId || undefined,
+                  categorySlug: d.categorySlug,
+                  subcategorySlug: d.subcategorySlug,
                 }}
                 index={idx}
               />

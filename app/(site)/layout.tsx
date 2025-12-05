@@ -60,17 +60,18 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SiteLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  let initialCategories: { id: number; name: string; subcategories: { id: number; name: string }[] }[] = []
+  let initialCategories: { id: number; name: string; slug?: string | null; subcategories: { id: number; name: string; slug?: string | null }[] }[] = []
   try {
     const cats = await prisma.category.findMany({
       orderBy: [{ sort: 'asc' }, { id: 'desc' }],
       select: {
         id: true,
         name: true,
-        subcategories: { orderBy: [{ sort: 'asc' }, { id: 'asc' }], select: { id: true, name: true } },
+        slug: true,
+        subcategories: { orderBy: [{ sort: 'asc' }, { id: 'asc' }], select: { id: true, name: true, slug: true } },
       },
     })
-    initialCategories = cats.map(c => ({ id: c.id, name: c.name, subcategories: c.subcategories.map(s => ({ id: s.id, name: s.name })) }))
+    initialCategories = cats.map(c => ({ id: c.id, name: c.name, slug: (c as any).slug || null, subcategories: c.subcategories.map(s => ({ id: s.id, name: s.name, slug: (s as any).slug || null })) }))
   } catch {}
   let initialSiteConfig: { siteName?: string | null; siteLogo?: string | null } | null = null
   try {

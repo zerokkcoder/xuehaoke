@@ -12,8 +12,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const r = await prisma.resource.findUnique({
       where: { id: idNum },
       include: {
-        category: { select: { id: true, name: true } },
-        subcategory: { select: { id: true, name: true } },
+        category: { select: { id: true, name: true, slug: true } },
+        subcategory: { select: { id: true, name: true, slug: true } },
         tags: { include: { tag: true } },
         downloads: true,
       },
@@ -52,9 +52,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       cover: r.cover || null,
       content: r.content,
       price: r.price,
-      category: r.category ? { id: r.category.id, name: r.category.name } : null,
-      subcategory: r.subcategory ? { id: r.subcategory.id, name: r.subcategory.name } : null,
-      tags: r.tags.map((t: any) => ({ id: t.tagId, name: t.tag.name })),
+      category: r.category ? { id: r.category.id, name: r.category.name, slug: (r.category as any).slug || null } : null,
+      subcategory: r.subcategory ? { id: r.subcategory.id, name: r.subcategory.name, slug: (r.subcategory as any).slug || null } : null,
+      tags: r.tags.map((t: any) => ({ id: t.tagId, name: t.tag.name, slug: (t.tag as any).slug || null })),
       downloads: authorized ? r.downloads.map((d: any) => ({ id: d.id, url: d.url, code: d.code })) : [],
       authorized,
     }

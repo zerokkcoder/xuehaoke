@@ -10,11 +10,11 @@ export async function GET() {
       include: {
         subcategories: {
           orderBy: [{ sort: 'asc' }, { id: 'asc' }],
-          select: { id: true, name: true, sort: true },
+          select: { id: true, name: true, slug: true, sort: true },
         },
       },
     })
-    const data = rows.map((c) => ({ id: c.id, name: c.name, sort: c.sort, subcategories: c.subcategories }))
+    const data = rows.map((c) => ({ id: c.id, name: c.name, slug: (c as any).slug || null, sort: c.sort, subcategories: c.subcategories }))
     return NextResponse.json({ success: true, data }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (err: any) {
     return NextResponse.json({ success: true, data: [] }, { headers: { 'Cache-Control': 'no-store' } })

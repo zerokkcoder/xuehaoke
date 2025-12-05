@@ -14,8 +14,8 @@ export async function GET(req: Request) {
   const base = `${proto}://${host}`
 
   const [cats, tags, resources] = await Promise.all([
-    prisma.category.findMany({ select: { id: true, createdAt: true } }),
-    prisma.tag.findMany({ select: { id: true, createdAt: true } }),
+    prisma.category.findMany({ select: { slug: true, createdAt: true } }),
+    prisma.tag.findMany({ select: { slug: true, createdAt: true } }),
     prisma.resource.findMany({ select: { id: true, updatedAt: true } }),
   ])
 
@@ -32,10 +32,10 @@ export async function GET(req: Request) {
   for (const c of cats) {
     entries.push(
       `<url>`+
-        `<loc>${base}/category/${c.id}</loc>`+
-        `<changefreq>weekly</changefreq>`+
-        `<priority>0.6</priority>`+
-        `<lastmod>${fmtDate(c.createdAt)}</lastmod>`+
+      `<loc>${base}/category/${(c as any).slug}</loc>`+
+      `<changefreq>weekly</changefreq>`+
+      `<priority>0.6</priority>`+
+      `<lastmod>${fmtDate(c.createdAt)}</lastmod>`+
       `</url>`
     )
   }
@@ -43,10 +43,10 @@ export async function GET(req: Request) {
   for (const t of tags) {
     entries.push(
       `<url>`+
-        `<loc>${base}/tag/${t.id}</loc>`+
-        `<changefreq>weekly</changefreq>`+
-        `<priority>0.5</priority>`+
-        `<lastmod>${fmtDate(t.createdAt)}</lastmod>`+
+      `<loc>${base}/tag/${(t as any).slug}</loc>`+
+      `<changefreq>weekly</changefreq>`+
+      `<priority>0.5</priority>`+
+      `<lastmod>${fmtDate(t.createdAt)}</lastmod>`+
       `</url>`
     )
   }

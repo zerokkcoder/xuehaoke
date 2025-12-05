@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import prisma from '@/lib/prisma'
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const idNum = Number(params.id)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
   try {
-    const t = await prisma.tag.findUnique({ where: { id: idNum }, select: { name: true } })
+    const t = await prisma.tag.findUnique({ where: { slug }, select: { name: true } })
     const name = t?.name || '标签'
     const title = `${name} - 标签资源`
     const description = `查看与「${name}」相关的资源合集。`
@@ -12,12 +12,12 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       title,
       description,
       keywords: [name],
-      alternates: { canonical: `/tag/${params.id}` },
+      alternates: { canonical: `/tag/${slug}` },
       openGraph: { title: name, description, type: 'website', locale: 'zh_CN' },
       twitter: { card: 'summary', title: name, description },
     }
   } catch {
-    return { title: '标签', alternates: { canonical: `/tag/${params.id}` } }
+    return { title: '标签', alternates: { canonical: `/tag/${slug}` } }
   }
 }
 

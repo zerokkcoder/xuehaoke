@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import pinyin from 'tiny-pinyin'
 import jwt from 'jsonwebtoken'
 
 function verifyAdmin(req: Request) {
@@ -71,18 +72,38 @@ export async function POST(req: Request) {
   try {
     // ensure tags exist
     const tagIds: number[] = []
-    function makeSlug(input: string) {
-      const base = String(input).trim().toLowerCase()
-      const s = base.replace(/\s+/g, '-').replace(/[^\w\-\u4e00-\u9fa5]/g, '')
-      return s || base
+    function makeLatinSlug(input: string) {
+      const raw = String(input).trim()
+      const hasHan = /[\u4e00-\u9fa5]/.test(raw)
+      let latin = raw
+      try {
+        latin = hasHan ? pinyin.convertToPinyin(raw, '-', true) : raw
+      } catch {
+        latin = raw
+      }
+      latin = latin.toLowerCase()
+      latin = latin.replace(/\s+/g, '-')
+      latin = latin.replace(/[^a-z0-9\-]/g, '')
+      latin = latin.replace(/-+/g, '-').replace(/^-+|-+$/g, '')
+      return latin || 'tag'
     }
     for (const name of (tags as string[])) {
       const nm = String(name).trim()
       if (!nm) continue
-      const existing = await prisma.tag.findUnique({ where: { name: nm }, select: { id: true } })
-      if (existing) tagIds.push(existing.id)
+      const existing = await prisma.tag.findUnique({ where: { name: nm }, select: { id: true, slug: true } })
+      if (existing) {
+        const currentSlug = String(existing.slug || '').trim()
+        const bad = currentSlug === '' || /[^a-z0-9\-]/i.test(currentSlug) || /^\d+$/.test(currentSlug)
+        if (bad) {
+          let s = makeLatinSlug(nm)
+          const dup = await prisma.tag.findFirst({ where: { slug: s, NOT: { id: existing.id } } })
+          if (dup) s = `${s}-${existing.id}`
+          await prisma.tag.update({ where: { id: existing.id }, data: { slug: s } })
+        }
+        tagIds.push(existing.id)
+      }
       else {
-        const created = await (prisma as any).tag.create({ data: { name: nm, slug: makeSlug(nm) } })
+        const created = await (prisma as any).tag.create({ data: { name: nm, slug: makeLatinSlug(nm) } })
         tagIds.push(created.id)
       }
     }

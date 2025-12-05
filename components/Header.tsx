@@ -16,7 +16,7 @@ interface HeaderProps {
   initialSiteConfig?: { siteName?: string | null; siteLogo?: string | null } | null
 }
 
-type NavCategory = { id: number; name: string; subcategories: { id: number; name: string }[] }
+type NavCategory = { id: number; name: string; slug?: string | null; subcategories: { id: number; name: string; slug?: string | null }[] }
 
 export default function Header({ currentUser, initialCategories = [], initialSiteConfig = null }: HeaderProps) {
   const pathname = usePathname()
@@ -38,7 +38,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
         if (!res.ok) return
         let data: unknown = null
         try { data = await res.json() } catch { return }
-        const incoming: NavCategory[] = Array.isArray((data as any)?.data) ? (data as any).data : []
+        const incoming: any[] = Array.isArray((data as any)?.data) ? (data as any).data : []
         const seenCat = new Set<number>()
         const dedupCats: NavCategory[] = []
         for (const c of incoming) {
@@ -49,8 +49,8 @@ export default function Header({ currentUser, initialCategories = [], initialSit
             if (seenSub.has(s.id)) return false
             seenSub.add(s.id)
             return true
-          }).map((s: { id: number; name: string }) => ({ id: s.id, name: s.name }))
-          dedupCats.push({ id: c.id, name: c.name, subcategories: subs })
+          }).map((s: any) => ({ id: s.id, name: s.name, slug: s.slug || null }))
+          dedupCats.push({ id: c.id, name: c.name, slug: c.slug || null, subcategories: subs })
         }
         setNavCategories(dedupCats)
       } catch (err: unknown) {
@@ -138,8 +138,8 @@ export default function Header({ currentUser, initialCategories = [], initialSit
                 >
                   <div className="flex items-center gap-1">
                     <Link
-                      href={`/category/${category.id}`}
-                      className={`flex items-center gap-1 text-foreground hover:text-violet-500 pb-0.5 border-b-2 ${pathname?.startsWith(`/category/${category.id}`) ? 'border-violet-500' : 'border-transparent'}`}
+                      href={`/category/${category.slug}`}
+                      className={`flex items-center gap-1 text-foreground hover:text-violet-500 pb-0.5 border-b-2 ${pathname?.startsWith(`/category/${category.slug}`) ? 'border-violet-500' : 'border-transparent'}`}
                     >
                       <span className="text-sm">{category.name}</span>
                     </Link>
@@ -173,7 +173,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
                         {category.subcategories.map((subcategory) => (
                           <Link
                             key={subcategory.id}
-                            href={`/category/${category.id}/${subcategory.id}`}
+                            href={`/category/${category.slug}/${subcategory.slug}`}
                             className="block px-3 py-2 text-sm text-muted-foreground hover:text-violet-500 hover:bg-secondary"
                           >
                             {subcategory.name}
@@ -262,8 +262,8 @@ export default function Header({ currentUser, initialCategories = [], initialSit
               {navCategories.map((category) => (
                 <div key={category.id}>
                   <Link
-                    href={`/category/${category.id}`}
-                    className={`flex items-center gap-2 px-4 py-2 text-foreground hover:text-violet-500 hover:bg-secondary rounded-md ${pathname?.startsWith(`/category/${category.id}`) ? 'underline underline-offset-4 decoration-2 decoration-violet-500' : ''}`}
+                    href={`/category/${category.slug}`}
+                    className={`flex items-center gap-2 px-4 py-2 text-foreground hover:text-violet-500 hover:bg-secondary rounded-md ${pathname?.startsWith(`/category/${category.slug}`) ? 'underline underline-offset-4 decoration-2 decoration-violet-500' : ''}`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground" aria-hidden="true" />
@@ -273,7 +273,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
                     {category.subcategories.map((subcategory) => (
                       <Link
                         key={subcategory.id}
-                        href={`/category/${category.id}/${subcategory.id}`}
+                        href={`/category/${category.slug}/${subcategory.slug}`}
                         className="block px-4 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >

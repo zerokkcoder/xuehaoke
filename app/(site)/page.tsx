@@ -83,8 +83,8 @@ function HomeInner() {
         title: r.title,
         coverImage: r.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&h=600&fit=crop',
         category: r.subcategoryName || r.categoryName || '其他',
-        categoryId: r.categoryId,
-        subcategoryId: r.subcategoryId,
+        categorySlug: r.categorySlug || null,
+        subcategorySlug: r.subcategorySlug || null,
       }))
       // 以 ref 跟踪已加载的唯一 ID，过滤掉重复项
       const filtered = next.filter((item: { id: number }) => !loadedIdsRef.current.has(item.id))
