@@ -2,16 +2,13 @@ export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
 
+import { NextResponse } from 'next/server'
+
 export default async function proxy(req: Request) {
   const nonce = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)).replace(/-/g, '')
 
   const reqHeaders = new Headers(req.headers)
   reqHeaders.set('x-nonce', nonce)
-  const nextReq = new Request(req, { headers: reqHeaders })
-
-  const upstreamRes = await fetch(nextReq)
-  const resHeaders = new Headers(upstreamRes.headers)
-
   const csp = [
     "default-src 'self'",
     "img-src 'self' https: data:",
@@ -23,11 +20,10 @@ export default async function proxy(req: Request) {
     'upgrade-insecure-requests',
   ].join('; ')
 
-  resHeaders.set('Content-Security-Policy', csp)
+  // Provide CSP in request so Next can extract nonce during SSR
+  reqHeaders.set('Content-Security-Policy', csp)
+  const res = NextResponse.next({ request: { headers: reqHeaders } })
 
-  return new Response(upstreamRes.body, {
-    status: upstreamRes.status,
-    statusText: upstreamRes.statusText,
-    headers: resHeaders,
-  })
+  res.headers.set('Content-Security-Policy', csp)
+  return res
 }

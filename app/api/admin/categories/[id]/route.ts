@@ -15,10 +15,16 @@ function verifyAdmin(req: Request) {
   }
 }
 
+function makeSlug(input: string) {
+  const base = String(input).trim().toLowerCase()
+  const s = base.replace(/\s+/g, '-').replace(/[^\w\-\u4e00-\u9fa5]/g, '')
+  return s || base
+}
+
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = verifyAdmin(req)
   if (!admin) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-  const { name, sort } = await req.json()
+  const { name, sort, slug } = await req.json()
   if (!name || String(name).trim() === '') {
     return NextResponse.json({ success: false, message: '名称不能为空' }, { status: 400 })
   }
@@ -30,6 +36,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const data: any = { name: String(name).trim() }
     if (Number.isFinite(Number(sort))) data.sort = Number(sort)
+    if (slug != null) {
+      const finalSlug = String(slug).trim() ? makeSlug(String(slug)) : makeSlug(String(name))
+      const dup = await prisma.category.findFirst({ where: { slug: finalSlug, NOT: { id: idNum } } })
+      if (dup) return NextResponse.json({ success: false, message: 'Slug 已存在' }, { status: 400 })
+      data.slug = finalSlug
+    }
     const updated = await prisma.category.update({ where: { id: idNum }, data })
     return NextResponse.json({ success: true, data: updated })
   } catch (err: any) {

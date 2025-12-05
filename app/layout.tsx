@@ -6,6 +6,8 @@ import { ToastProvider } from "@/components/Toast";
 import { headers } from "next/headers";
 // Root layout: keep minimal to allow route groups to define their own layouts
 
+export const dynamic = 'force-dynamic'
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

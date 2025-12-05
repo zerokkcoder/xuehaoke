@@ -23,6 +23,7 @@ model AdminUser {
 model Category {
   id            Int           @id @default(autoincrement())
   name          String        @unique
+  slug          String?       @unique
   sort          Int           @default(0)
   createdAt     DateTime      @default(now()) @map("created_at")
   subcategories Subcategory[]
@@ -35,6 +36,7 @@ model Subcategory {
   id         Int      @id @default(autoincrement())
   categoryId Int      @map("category_id")
   name       String
+  slug       String?  @unique
   sort       Int      @default(0)
   createdAt  DateTime @default(now()) @map("created_at")
   category   Category @relation(fields: [categoryId], references: [id])
@@ -79,6 +81,7 @@ model UserResourceAccess {
 model Tag {
   id        Int           @id @default(autoincrement())
   name      String        @unique
+  slug      String?       @unique
   createdAt DateTime      @default(now())
   resources ResourceTag[]
 

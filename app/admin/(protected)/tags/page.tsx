@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useToast } from '@/components/Toast'
 
-type TagItem = { id: number; name: string }
+type TagItem = { id: number; name: string; slug?: string }
 
 export default function AdminTagsPage() {
   const { toast } = useToast()
@@ -14,6 +14,7 @@ export default function AdminTagsPage() {
   const [total, setTotal] = useState(0)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
+  const [editSlug, setEditSlug] = useState('')
 
   const fetchList = async (p = page, s = size) => {
     setLoading(true)
@@ -30,16 +31,17 @@ export default function AdminTagsPage() {
   const startEdit = (tag: TagItem) => {
     setEditingId(tag.id)
     setEditName(tag.name)
+    setEditSlug(tag.slug || '')
   }
 
   const saveEdit = async () => {
     if (!editingId) return
     const res = await fetch(`/api/admin/tags/${editingId}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: editName })
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: editName, slug: editSlug.trim() || undefined })
     })
     const data = await res.json()
     if (data?.success) {
-      setEditingId(null); setEditName('')
+      setEditingId(null); setEditName(''); setEditSlug('')
       fetchList()
     } else {
       toast(data?.message || '更新失败', 'error')
@@ -60,6 +62,7 @@ export default function AdminTagsPage() {
                 <tr className="text-left text-muted-foreground">
                   <th className="py-2 pr-4">ID</th>
                   <th className="py-2 pr-4">名称</th>
+                  <th className="py-2 pr-4">Slug</th>
                   <th className="py-2 pr-4">操作</th>
                 </tr>
               </thead>
@@ -72,6 +75,13 @@ export default function AdminTagsPage() {
                         <input value={editName} onChange={(e) => setEditName(e.target.value)} className="input" />
                       ) : (
                         tag.name
+                      )}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {editingId === tag.id ? (
+                        <input value={editSlug} onChange={(e) => setEditSlug(e.target.value)} className="input" />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">{tag.slug || ''}</span>
                       )}
                     </td>
                     <td className="py-2 pr-4">

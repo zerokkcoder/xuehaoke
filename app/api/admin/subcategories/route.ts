@@ -25,20 +25,32 @@ export async function GET(req: Request) {
   if (!categoryId) {
     return NextResponse.json({ success: false, message: '缺少 categoryId' }, { status: 400 })
   }
-  const rows = await prisma.subcategory.findMany({ where: { categoryId }, orderBy: [{ sort: 'asc' }, { id: 'desc' }], select: { id: true, name: true, sort: true, createdAt: true } })
+  const rows = await prisma.subcategory.findMany({ where: { categoryId }, orderBy: [{ sort: 'asc' }, { id: 'desc' }], select: { id: true, name: true, slug: true, sort: true, createdAt: true } })
   return NextResponse.json({ success: true, data: rows })
+}
+
+function makeSlug(input: string) {
+  const base = String(input).trim().toLowerCase()
+  const s = base.replace(/\s+/g, '-').replace(/[^\w\-\u4e00-\u9fa5]/g, '')
+  return s || base
 }
 
 export async function POST(req: Request) {
   const admin = verifyAdmin(req)
   if (!admin) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-  const { categoryId, name, sort } = await req.json()
+  const { categoryId, name, sort, slug } = await req.json()
   if (!categoryId || !name || String(name).trim() === '') {
     return NextResponse.json({ success: false, message: '参数错误' }, { status: 400 })
   }
+  if (slug == null || String(slug).trim() === '') {
+    return NextResponse.json({ success: false, message: 'Slug不能为空' }, { status: 400 })
+  }
   try {
     const sortNum = Number.isFinite(Number(sort)) ? Number(sort) : 0
-    const created = await prisma.subcategory.create({ data: { categoryId: Number(categoryId), name: String(name).trim(), sort: sortNum } })
+    const finalSlug = makeSlug(String(slug))
+    const dup = await prisma.subcategory.findFirst({ where: { slug: finalSlug } })
+    if (dup) return NextResponse.json({ success: false, message: 'Slug 已存在' }, { status: 400 })
+    const created = await prisma.subcategory.create({ data: { categoryId: Number(categoryId), name: String(name).trim(), slug: finalSlug, sort: sortNum } })
     return NextResponse.json({ success: true, data: created })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '创建失败' }, { status: 500 })
