@@ -32,7 +32,7 @@ export async function GET(req: Request) {
   for (const c of cats) {
     entries.push(
       `<url>`+
-      `<loc>${base}/category/${(c as any).slug}</loc>`+
+      `<loc>${base}/category/${c.slug}</loc>`+
       `<changefreq>weekly</changefreq>`+
       `<priority>0.6</priority>`+
       `<lastmod>${fmtDate(c.createdAt)}</lastmod>`+
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
   for (const t of tags) {
     entries.push(
       `<url>`+
-      `<loc>${base}/tag/${(t as any).slug}</loc>`+
+      `<loc>${base}/tag/${t.slug}</loc>`+
       `<changefreq>weekly</changefreq>`+
       `<priority>0.5</priority>`+
       `<lastmod>${fmtDate(t.createdAt)}</lastmod>`+

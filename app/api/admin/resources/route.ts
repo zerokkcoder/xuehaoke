@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     for (const name of (tags as string[])) {
       const nm = String(name).trim()
       if (!nm) continue
-      const existing = await prisma.tag.findUnique({ where: { name: nm }, select: { id: true, slug: true } })
+      const existing = await prisma.tag.findUnique({ where: { name: nm } })
       if (existing) {
         const currentSlug = String(existing.slug || '').trim()
         const bad = currentSlug === '' || /[^a-z0-9\-]/i.test(currentSlug) || /^\d+$/.test(currentSlug)
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
         tagIds.push(existing.id)
       }
       else {
-        const created = await (prisma as any).tag.create({ data: { name: nm, slug: makeLatinSlug(nm) } })
+        const created = await prisma.tag.create({ data: { name: nm, slug: makeLatinSlug(nm) } })
         tagIds.push(created.id)
       }
     }

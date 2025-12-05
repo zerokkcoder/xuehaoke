@@ -48,10 +48,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const data: any = { name: String(name).trim() }
     if (Number.isFinite(Number(sort))) data.sort = Number(sort)
     const finalSlug = makeLatinSlug(String(name))
-    const dup = await (prisma as any).subcategory.findFirst({ where: { slug: finalSlug, NOT: { id: idNum } } })
+    const dup = await prisma.subcategory.findFirst({ where: { slug: finalSlug, NOT: { id: idNum } } })
     if (dup) return NextResponse.json({ success: false, message: 'Slug 已存在' }, { status: 400 })
     data.slug = finalSlug
-    const updated = await (prisma as any).subcategory.update({ where: { id: idNum }, data })
+    const updated = await prisma.subcategory.update({ where: { id: idNum }, data })
     return NextResponse.json({ success: true, data: updated })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '更新失败' }, { status: 500 })

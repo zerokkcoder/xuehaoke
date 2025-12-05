@@ -22,13 +22,13 @@ export async function GET() {
     }
 
     const existing = new Set<string>(
-      tags
-        .map(t => String(t.slug || '').trim())
-        .filter(v => v && !/^\d+$/.test(v))
+      (tags as any[])
+        .map((t: any) => String(t.slug || '').trim())
+        .filter((v: any) => v && !/^\d+$/.test(v))
     )
 
     const updates: Promise<any>[] = []
-    for (const t of tags) {
+    for (const t of (tags as any[])) {
       const current = (t.slug == null ? '' : String(t.slug)).trim()
       if (isBadSlug(current)) {
         let candidate = makeSlug(t.name)
@@ -37,7 +37,7 @@ export async function GET() {
         // ensure unique
         if (existing.has(candidate)) candidate = `${candidate}-${t.id}`
         existing.add(candidate)
-        updates.push(prisma.tag.update({ where: { id: t.id }, data: { slug: candidate } }))
+        updates.push((prisma.tag.update({ where: { id: t.id }, data: { slug: candidate } })) as any)
       }
     }
     if (updates.length) {

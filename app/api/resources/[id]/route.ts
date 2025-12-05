@@ -12,8 +12,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const r = await prisma.resource.findUnique({
       where: { id: idNum },
       include: {
-        category: { select: { id: true, name: true, slug: true } },
-        subcategory: { select: { id: true, name: true, slug: true } },
+        category: true,
+        subcategory: true,
         tags: { include: { tag: true } },
         downloads: true,
       },

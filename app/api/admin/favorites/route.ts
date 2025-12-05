@@ -25,8 +25,8 @@ export async function GET(req: Request) {
   const q = (url.searchParams.get('q') || '').trim()
   const where = q ? { OR: [{ title: { contains: q } }, { url: { contains: q } }] } : undefined
   const [total, rows] = await Promise.all([
-    (prisma as any).favorite.count({ where }),
-    (prisma as any).favorite.findMany({ where, orderBy: [{ id: 'desc' }], skip, take: size, select: { id: true, title: true, url: true, enabled: true, createdAt: true } })
+    prisma.favorite.count({ where }),
+    prisma.favorite.findMany({ where, orderBy: [{ id: 'desc' }], skip, take: size, select: { id: true, title: true, url: true, enabled: true, createdAt: true } })
   ])
   return NextResponse.json({ success: true, data: rows, pagination: { page, size, total } })
 }
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
   const enabled = body?.enabled === false ? false : true
   if (!title || !urlStr) return NextResponse.json({ success: false, message: '标题和链接不能为空' }, { status: 400 })
   try {
-    const created = await (prisma as any).favorite.create({ data: { title, url: urlStr, enabled } })
+    const created = await prisma.favorite.create({ data: { title, url: urlStr, enabled } })
     return NextResponse.json({ success: true, data: created })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '创建失败' }, { status: 500 })

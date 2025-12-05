@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   if (!categoryId) {
     return NextResponse.json({ success: false, message: '缺少 categoryId' }, { status: 400 })
   }
-  const rows = await (prisma as any).subcategory.findMany({ where: { categoryId }, orderBy: [{ sort: 'asc' }, { id: 'desc' }], select: { id: true, name: true, slug: true, sort: true, createdAt: true } })
+  const rows = await prisma.subcategory.findMany({ where: { categoryId }, orderBy: [{ sort: 'asc' }, { id: 'desc' }] })
   return NextResponse.json({ success: true, data: rows })
 }
 
@@ -56,9 +56,10 @@ export async function POST(req: Request) {
   try {
     const sortNum = Number.isFinite(Number(sort)) ? Number(sort) : 0
     const finalSlug = makeLatinSlug(String(name))
-    const dup = await (prisma as any).subcategory.findFirst({ where: { slug: finalSlug } })
+    const dupRows: Array<{ id: number }> = await prisma.$queryRawUnsafe('SELECT id FROM subcategories WHERE slug = ? LIMIT 1', finalSlug)
+    const dup = dupRows?.[0] || null
     if (dup) return NextResponse.json({ success: false, message: 'Slug 已存在' }, { status: 400 })
-    const created = await (prisma as any).subcategory.create({ data: { categoryId: Number(categoryId), name: String(name).trim(), slug: finalSlug, sort: sortNum } })
+    const created = await prisma.subcategory.create({ data: { categoryId: Number(categoryId), name: String(name).trim(), slug: finalSlug, sort: sortNum } })
     return NextResponse.json({ success: true, data: created })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '创建失败' }, { status: 500 })

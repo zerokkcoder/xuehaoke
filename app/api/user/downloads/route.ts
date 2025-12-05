@@ -9,30 +9,23 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({ where: { username } })
     if (!user) return NextResponse.json({ success: false, message: '用户不存在' }, { status: 404 })
+    const userId = user.id
 
     const accesses = await prisma.userResourceAccess.findMany({
-      where: { userId: user.id },
+      where: { userId },
       orderBy: { createdAt: 'desc' },
       include: {
-        resource: {
-          select: {
-            id: true,
-            title: true,
-            cover: true,
-            category: { select: { name: true, slug: true } },
-            subcategory: { select: { name: true, slug: true } },
-          }
-        }
+        resource: { include: { category: true, subcategory: true } }
       }
     })
 
-    const data = accesses.map(a => ({
+    const data = accesses.map((a: any) => ({
       resourceId: a.resourceId,
       accessedAt: a.createdAt,
       title: a.resource?.title || '',
       cover: a.resource?.cover || null,
-      categorySlug: (a.resource?.category as any)?.slug || null,
-      subcategorySlug: (a.resource?.subcategory as any)?.slug || null,
+      categorySlug: (a.resource as any)?.category?.slug || null,
+      subcategorySlug: (a.resource as any)?.subcategory?.slug || null,
       categoryName: a.resource?.category?.name || '',
       subcategoryName: a.resource?.subcategory?.name || '',
     }))

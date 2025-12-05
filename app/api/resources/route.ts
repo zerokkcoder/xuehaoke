@@ -56,30 +56,25 @@ export async function GET(req: Request) {
       prisma.resource.findMany({
         orderBy,
         where: finalWhere,
-        select: {
-          id: true,
-          categoryId: true,
-          subcategoryId: true,
-          title: true,
-          cover: true,
-          category: { select: { name: true, slug: true } },
-          subcategory: { select: { name: true, slug: true } },
+        include: {
+          category: true,
+          subcategory: true,
         },
         skip,
         take: size,
       })
     ])
 
-    const data = rows.map(r => ({
+    const data = (rows as any[]).map((r: any) => ({
       id: r.id,
       title: r.title,
       cover: r.cover || null,
-      categoryName: r.category?.name || '',
-      subcategoryName: r.subcategory?.name || '',
+      categoryName: (r as any).category?.name || '',
+      subcategoryName: (r as any).subcategory?.name || '',
       categoryId: r.categoryId,
       subcategoryId: r.subcategoryId,
-      categorySlug: (r.category as any)?.slug || null,
-      subcategorySlug: (r.subcategory as any)?.slug || null,
+      categorySlug: (r as any).category?.slug || null,
+      subcategorySlug: (r as any).subcategory?.slug || null,
     }))
 
     return NextResponse.json({ success: true, data, pagination: { page, size, total } })

@@ -4,7 +4,8 @@ import prisma from '@/lib/prisma'
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   try {
-    const t = await prisma.tag.findUnique({ where: { slug }, select: { name: true } })
+    const rows: Array<{ name: string }> = await prisma.$queryRawUnsafe('SELECT name FROM tags WHERE slug = ? LIMIT 1', slug)
+    const t = rows?.[0] || null
     const name = t?.name || '标签'
     const title = `${name} - 标签资源`
     const description = `查看与「${name}」相关的资源合集。`

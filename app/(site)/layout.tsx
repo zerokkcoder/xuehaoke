@@ -64,14 +64,11 @@ export default async function SiteLayout({ children }: Readonly<{ children: Reac
   try {
     const cats = await prisma.category.findMany({
       orderBy: [{ sort: 'asc' }, { id: 'desc' }],
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        subcategories: { orderBy: [{ sort: 'asc' }, { id: 'asc' }], select: { id: true, name: true, slug: true } },
+      include: {
+        subcategories: { orderBy: [{ sort: 'asc' }, { id: 'asc' }] },
       },
     })
-    initialCategories = cats.map(c => ({ id: c.id, name: c.name, slug: (c as any).slug || null, subcategories: c.subcategories.map(s => ({ id: s.id, name: s.name, slug: (s as any).slug || null })) }))
+    initialCategories = cats.map((c) => ({ id: c.id, name: c.name, slug: (c as any).slug || null, subcategories: (c.subcategories || []).map((s: any) => ({ id: s.id, name: s.name, slug: (s as any).slug || null })) }))
   } catch {}
   let initialSiteConfig: { siteName?: string | null; siteLogo?: string | null } | null = null
   try {

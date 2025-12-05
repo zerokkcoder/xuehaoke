@@ -73,7 +73,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       for (const name of (tags as string[])) {
         const nm = String(name).trim()
         if (!nm) continue
-        const existing = await prisma.tag.findUnique({ where: { name: nm }, select: { id: true, slug: true } })
+        const existing = await prisma.tag.findUnique({ where: { name: nm } })
         if (existing) {
           const currentSlug = String(existing.slug || '').trim()
           const bad = currentSlug === '' || /[^a-z0-9\-]/i.test(currentSlug) || /^\d+$/.test(currentSlug)

@@ -23,7 +23,6 @@ export async function GET(req: Request) {
   if (!admin) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
   const rows = await prisma.category.findMany({
     orderBy: [{ sort: 'asc' }, { id: 'desc' }],
-    select: { id: true, name: true, slug: true, sort: true, createdAt: true },
   })
   return NextResponse.json({ success: true, data: rows })
 }
@@ -54,7 +53,8 @@ export async function POST(req: Request) {
   try {
     const sortNum = Number.isFinite(Number(sort)) ? Number(sort) : 0
     const finalSlug = makeLatinSlug(String(name))
-    const dup = await prisma.category.findFirst({ where: { slug: finalSlug } })
+    const dupRows: Array<{ id: number }> = await prisma.$queryRawUnsafe('SELECT id FROM categories WHERE slug = ? LIMIT 1', finalSlug)
+    const dup = dupRows?.[0] || null
     if (dup) return NextResponse.json({ success: false, message: 'Slug 已存在' }, { status: 400 })
     const created = await prisma.category.create({ data: { name: String(name).trim(), slug: finalSlug, sort: sortNum } })
     return NextResponse.json({ success: true, data: created })

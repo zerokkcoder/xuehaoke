@@ -14,8 +14,8 @@ export async function GET(req: Request) {
       ? { OR: [{ title: { contains: q } }, { url: { contains: q } }] }
       : undefined
     const [total, items] = await Promise.all([
-      (prisma as any).favorite.count({ where }),
-      (prisma as any).favorite.findMany({
+      prisma.favorite.count({ where }),
+      prisma.favorite.findMany({
         where,
         orderBy: { id: 'desc' },
         skip,

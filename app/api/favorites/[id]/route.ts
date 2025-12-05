@@ -8,7 +8,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ success: false, message: '无效的收藏ID' }, { status: 400 })
   }
   try {
-    await (prisma as any).favorite.update({ where: { id: idNum }, data: { enabled: false } })
+    await prisma.favorite.update({ where: { id: idNum }, data: { enabled: false } })
     return NextResponse.json({ success: true })
   } catch (err: any) {
     try {
