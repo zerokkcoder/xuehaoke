@@ -82,7 +82,7 @@ export async function POST(req: Request) {
       const existing = await prisma.tag.findUnique({ where: { name: nm }, select: { id: true } })
       if (existing) tagIds.push(existing.id)
       else {
-        const created = await prisma.tag.create({ data: { name: nm, slug: makeSlug(nm) } })
+        const created = await (prisma as any).tag.create({ data: { name: nm, slug: makeSlug(nm) } })
         tagIds.push(created.id)
       }
     }

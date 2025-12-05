@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   const skip = (page - 1) * size
   const [total, tags] = await Promise.all([
     prisma.tag.count(),
-    prisma.tag.findMany({ orderBy: [{ id: 'desc' }], select: { id: true, name: true, slug: true, createdAt: true }, skip, take: size })
+    (prisma as any).tag.findMany({ orderBy: [{ id: 'desc' }], select: { id: true, name: true, slug: true, createdAt: true }, skip, take: size })
   ])
   return NextResponse.json({ success: true, data: tags, pagination: { page, size, total } })
 }
