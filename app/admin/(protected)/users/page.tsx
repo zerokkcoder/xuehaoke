@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useToast } from '@/components/Toast'
 import ConfirmDialog from '@/app/admin/_components/ConfirmDialog'
 
-type UserItem = { id: number; username: string; email: string; emailVerified: boolean; createdAt: string }
+type UserItem = { id: number; username: string; email: string; emailVerified: boolean; createdAt: string; isVip?: boolean; vipPlanName?: string | null }
 
 export default function AdminUsersPage() {
   const { toast } = useToast()
@@ -116,6 +116,7 @@ export default function AdminUsersPage() {
                   <th className="py-2 pr-4">用户名</th>
                   <th className="py-2 pr-4">邮箱</th>
                   <th className="py-2 pr-4">已验证</th>
+                  <th className="py-2 pr-4">会员类型</th>
                   <th className="py-2 pr-4">创建时间</th>
                   <th className="py-2 pr-4">操作</th>
                 </tr>
@@ -138,14 +139,17 @@ export default function AdminUsersPage() {
                         u.email
                       )}
                     </td>
-                    <td className="py-2 pr-4">
-                      {editingId === u.id ? (
-                        <input type="checkbox" checked={editUser.emailVerified} onChange={(e) => setEditUser(prev => ({ ...prev, emailVerified: e.target.checked }))} />
-                      ) : (
-                        u.emailVerified ? '是' : '否'
-                      )}
-                    </td>
-                    <td className="py-2 pr-4">{new Date(u.createdAt).toLocaleString()}</td>
+                  <td className="py-2 pr-4">
+                    {editingId === u.id ? (
+                      <input type="checkbox" checked={editUser.emailVerified} onChange={(e) => setEditUser(prev => ({ ...prev, emailVerified: e.target.checked }))} />
+                    ) : (
+                      u.emailVerified ? '是' : '否'
+                    )}
+                  </td>
+                  <td className="py-2 pr-4">
+                    {u.isVip ? (`VIP${u.vipPlanName ? `（${u.vipPlanName}）` : ''}`) : '普通用户'}
+                  </td>
+                  <td className="py-2 pr-4">{new Date(u.createdAt).toLocaleString()}</td>
                     <td className="py-2 pr-4">
                       {editingId === u.id ? (
                         <div className="flex items-center gap-2">

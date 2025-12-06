@@ -36,9 +36,34 @@ export async function GET(req: Request) {
     : undefined
   const [total, rows] = await Promise.all([
     prisma.user.count({ where }),
-    prisma.user.findMany({ where, orderBy: [{ id: 'desc' }], skip, take: size, select: { id: true, username: true, email: true, emailVerified: true, createdAt: true } })
+    prisma.user.findMany({
+      where,
+      orderBy: [{ id: 'desc' }],
+      skip,
+      take: size,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        emailVerified: true,
+        createdAt: true,
+        isVip: true,
+        vipExpireAt: true,
+        vipPlan: { select: { name: true } },
+      },
+    }),
   ])
-  return NextResponse.json({ success: true, data: rows, pagination: { page, size, total } })
+  const data = rows.map((u) => ({
+    id: u.id,
+    username: u.username,
+    email: u.email,
+    emailVerified: u.emailVerified,
+    createdAt: u.createdAt,
+    isVip: !!u.isVip,
+    vipExpireAt: u.vipExpireAt ?? null,
+    vipPlanName: (u.vipPlan?.name ?? null),
+  }))
+  return NextResponse.json({ success: true, data, pagination: { page, size, total } })
 }
 
 // POST /api/admin/users
