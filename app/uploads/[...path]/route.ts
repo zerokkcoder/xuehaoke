@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { readFile, stat } from 'fs/promises'
+import { stat } from 'fs/promises'
+import { createReadStream } from 'fs'
 import path from 'path'
 
 export const dynamic = 'force-dynamic'
@@ -25,13 +26,27 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
     if (ifModifiedSince && new Date(ifModifiedSince).getTime() >= new Date(st.mtime).getTime()) {
       return new NextResponse(null, { status: 304, headers: { 'ETag': etag, 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=31536000, immutable' } })
     }
-    const buf = await readFile(abs)
     const ext = path.extname(abs).toLowerCase()
     let ct = 'application/octet-stream'
     if (ext === '.png') ct = 'image/png'
     else if (ext === '.jpg' || ext === '.jpeg') ct = 'image/jpeg'
     else if (ext === '.webp') ct = 'image/webp'
-    return new NextResponse(buf, { headers: { 'Content-Type': ct, 'ETag': etag, 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=31536000, immutable' } })
+    const fileStream = createReadStream(abs)
+    const rs = new ReadableStream<Uint8Array>({
+      start(controller) {
+        fileStream.on('data', (chunk: Buffer | string) => {
+          if (typeof chunk === 'string') {
+            const te = new TextEncoder()
+            controller.enqueue(te.encode(chunk))
+          } else {
+            controller.enqueue(new Uint8Array(chunk))
+          }
+        })
+        fileStream.on('end', () => controller.close())
+        fileStream.on('error', (err) => controller.error(err))
+      }
+    })
+    return new NextResponse(rs, { headers: { 'Content-Type': ct, 'ETag': etag, 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=31536000, immutable' } })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || 'Not Found' }, { status: 404 })
   }
