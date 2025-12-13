@@ -32,6 +32,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
     else if (ext === '.jpg' || ext === '.jpeg') ct = 'image/jpeg'
     else if (ext === '.webp') ct = 'image/webp'
     const fileStream = createReadStream(abs)
+    const signal = (req as any).signal
+    if (signal && typeof signal.addEventListener === 'function') {
+      signal.addEventListener('abort', () => {
+        try { fileStream.destroy() } catch {}
+      })
+    }
     const rs = new ReadableStream<Uint8Array>({
       start(controller) {
         fileStream.on('data', (chunk: Buffer | string) => {
