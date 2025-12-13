@@ -27,7 +27,7 @@ export async function GET(req: Request) {
       take: size,
     })
 
-    const data = rows.map(r => ({
+    const data = rows.map((r: any) => ({
       id: r.id,
       title: r.title,
       cover: r.cover || null,

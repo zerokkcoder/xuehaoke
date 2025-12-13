@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import prisma from "@/lib/prisma";
 import Footer from "@/components/Footer";
 import FloatingActions from "@/components/FloatingActions";
+import { headers } from "next/headers";
 
 // 强制此布局动态渲染，避免首页等使用旧的站点设置缓存
 export const dynamic = 'force-dynamic'
@@ -28,10 +29,15 @@ export async function generateMetadata(): Promise<Metadata> {
     const description = r?.site_description || "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。"
     const keywords = r?.site_keywords || "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计"
     const logo = r?.site_logo || '/logo.png'
+    const hs = await headers()
+    const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : 'http://localhost:3000')
     return {
       title,
       description,
       keywords,
+      metadataBase: new URL(origin),
       robots: { index: true, follow: true },
       alternates: { canonical: '/' },
       openGraph: {
@@ -50,10 +56,15 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     }
   } catch {
+    const hs = await headers()
+    const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : 'http://localhost:3000')
     return {
       title: "骇课网 - 专业资源下载平台",
       description: "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。",
       keywords: "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计",
+      metadataBase: new URL(origin),
       robots: { index: true, follow: true },
     }
   }
@@ -68,7 +79,7 @@ export default async function SiteLayout({ children }: Readonly<{ children: Reac
         subcategories: { orderBy: [{ sort: 'asc' }, { id: 'asc' }] },
       },
     })
-    initialCategories = cats.map((c) => ({ id: c.id, name: c.name, slug: (c as any).slug || null, subcategories: (c.subcategories || []).map((s: any) => ({ id: s.id, name: s.name, slug: (s as any).slug || null })) }))
+    initialCategories = cats.map((c: any) => ({ id: c.id, name: c.name, slug: (c as any).slug || null, subcategories: (c.subcategories || []).map((s: any) => ({ id: s.id, name: s.name, slug: (s as any).slug || null })) }))
   } catch {}
   let initialSiteConfig: { siteName?: string | null; siteLogo?: string | null } | null = null
   try {

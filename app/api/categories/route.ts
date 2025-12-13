@@ -14,7 +14,7 @@ export async function GET() {
         },
       },
     })
-    const data = rows.map((c) => ({ id: c.id, name: c.name, slug: c.slug || null, sort: c.sort, subcategories: c.subcategories }))
+    const data = rows.map((c: any) => ({ id: c.id, name: c.name, slug: c.slug || null, sort: c.sort, subcategories: c.subcategories }))
     return NextResponse.json({ success: true, data }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (err: any) {
     return NextResponse.json({ success: true, data: [] }, { headers: { 'Cache-Control': 'no-store' } })
