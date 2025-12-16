@@ -9,16 +9,18 @@ function fmtDate(d: Date | string | null | undefined): string {
 }
 
 export async function GET(req: Request) {
-  const envBase = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || ''
+  const envBaseRaw = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || ''
+  const isLocalHost = (h: string) => /^(localhost|127\\.0\\.0\\.1)(:|$)/i.test(h)
   let base = ''
-  if (envBase) {
+  if (envBaseRaw) {
     try {
-      const u = new URL(envBase)
-      base = `${u.protocol}//${u.host}`
-    } catch {
-      base = envBase
-    }
-  } else {
+      const u = new URL(envBaseRaw)
+      if (!isLocalHost(u.host)) {
+        base = `${u.protocol}//${u.host}`
+      }
+    } catch {}
+  }
+  if (!base) {
     const rawProto = (req.headers.get('x-forwarded-proto') || '').split(',')[0].trim()
     const rawHost = (req.headers.get('x-forwarded-host') || '').split(',')[0].trim()
     let proto = rawProto || 'https'
