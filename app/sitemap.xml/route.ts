@@ -9,9 +9,33 @@ function fmtDate(d: Date | string | null | undefined): string {
 }
 
 export async function GET(req: Request) {
-  const proto = req.headers.get('x-forwarded-proto') || 'https'
-  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || new URL(req.url).host
-  const base = `${proto}://${host}`
+  const envBase = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || ''
+  let base = ''
+  if (envBase) {
+    try {
+      const u = new URL(envBase)
+      base = `${u.protocol}//${u.host}`
+    } catch {
+      base = envBase
+    }
+  } else {
+    const rawProto = (req.headers.get('x-forwarded-proto') || '').split(',')[0].trim()
+    const rawHost = (req.headers.get('x-forwarded-host') || '').split(',')[0].trim()
+    let proto = rawProto || 'https'
+    let host = rawHost || req.headers.get('host') || new URL(req.url).host
+    if (typeof host === 'string' && /^(localhost|127\\.0\\.0\\.1)/i.test(host)) {
+      const vercel = process.env.VERCEL_URL || ''
+      if (vercel) {
+        try {
+          const u = new URL(`https://${vercel}`)
+          host = u.host
+          proto = u.protocol.replace(':', '')
+        } catch {}
+      }
+    }
+    if (typeof host === 'string' && host.endsWith(':443') && proto !== 'https') proto = 'https'
+    base = `${proto}://${host}`
+  }
 
   const [cats, tags] = await Promise.all([
     prisma.category.findMany({ select: { slug: true, createdAt: true } }),
