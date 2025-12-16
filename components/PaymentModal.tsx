@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useToast } from '@/components/Toast'
 import Image from 'next/image'
 // import { processPayment, generateOrderId, paymentMethods, createPaymentStatus } from '@/lib/payment'
@@ -124,6 +124,18 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
     }
     setIsPolling(false)
   }
+
+  // Stop polling when modal closes or component unmounts
+  // Prevent intervals leaking and accumulating over time
+  // Also guards against parent forcibly closing the modal mid-poll
+  useEffect(() => {
+    if (!isOpen) {
+      stopPolling()
+    }
+    return () => {
+      stopPolling()
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
