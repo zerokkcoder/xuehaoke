@@ -11,10 +11,11 @@ export default async function proxy(req: Request) {
   reqHeaders.set('x-nonce', nonce)
   const csp = [
     "default-src 'self'",
-    "img-src 'self' https: data:",
-    `script-src 'self' 'nonce-${nonce}'`,
-    "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self'",
+    "img-src 'self' https: data: blob:",
+    "font-src 'self' https: data:",
+    `script-src 'self' 'nonce-${nonce}' https:`,
+    "style-src 'self' 'unsafe-inline' https:",
+    "connect-src 'self' https:",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     'upgrade-insecure-requests',
@@ -25,5 +26,9 @@ export default async function proxy(req: Request) {
   const res = NextResponse.next({ request: { headers: reqHeaders } })
 
   res.headers.set('Content-Security-Policy', csp)
+  res.headers.set('X-Content-Type-Options', 'nosniff')
+  res.headers.set('X-Frame-Options', 'SAMEORIGIN')
+  res.headers.set('Referrer-Policy', 'no-referrer-when-downgrade')
+  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()')
   return res
 }

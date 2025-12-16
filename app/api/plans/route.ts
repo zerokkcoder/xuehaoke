@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma'
 export async function GET() {
   const rows = await prisma.membershipPlan.findMany({ orderBy: [{ isPopular: 'desc' }, { price: 'asc' }, { id: 'asc' }] })
   // Normalize features to array of strings
-  const data = rows.map((p) => ({
+  const data = rows.map((p: any) => ({
     id: p.id,
     name: p.name,
     price: Number(p.price || 0),

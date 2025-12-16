@@ -37,7 +37,7 @@ export async function GET(req: Request) {
       take: size,
     }),
   ])
-  const data = resources.map(r => ({
+  const data = resources.map((r: any) => ({
     id: r.id,
     cover: r.cover,
     title: r.title,
@@ -48,8 +48,8 @@ export async function GET(req: Request) {
     hotScore: r.hotScore,
     category: r.category,
     subcategory: r.subcategory,
-    tags: r.tags.map(t => ({ id: t.tagId, name: t.tag.name })),
-    downloads: r.downloads.map(d => ({ id: d.id, url: d.url, code: d.code })),
+    tags: r.tags.map((t: any) => ({ id: t.tagId, name: t.tag.name })),
+    downloads: r.downloads.map((d: any) => ({ id: d.id, url: d.url, code: d.code })),
   }))
   return NextResponse.json({ success: true, data, pagination: { page, size, total } })
 }

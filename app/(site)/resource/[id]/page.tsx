@@ -13,7 +13,6 @@ import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { checkDownloadRestrictions, processDownload, DownloadResult, getUserDownloadQuota } from '@/lib/download';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 
@@ -330,7 +329,7 @@ export default function ResourceDetailPage() {
               <div className="prose prose-sm max-w-none text-foreground leading-relaxed mb-6">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw, rehypeHighlight]}
+                  rehypePlugins={[rehypeHighlight]}
                   components={{
                     a: ({ node, ...props }) => (
                       <a {...props} target="_blank" rel="noopener noreferrer" />

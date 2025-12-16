@@ -53,7 +53,7 @@ export async function GET(req: Request) {
       },
     }),
   ])
-  const data = rows.map((u) => ({
+  const data = rows.map((u: any) => ({
     id: u.id,
     username: u.username,
     email: u.email,

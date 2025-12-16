@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { readFile, stat } from 'fs/promises'
+import { stat } from 'fs/promises'
+import { createReadStream } from 'fs'
 import path from 'path'
 
 export const dynamic = 'force-dynamic'
@@ -14,6 +15,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
     const resolvedBase = path.resolve(baseDir)
     const resolvedAbs = path.resolve(abs)
     if (!resolvedAbs.startsWith(resolvedBase)) return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
+    const extLower = path.extname(abs).toLowerCase()
+    const dangerous = new Set(['.php', '.phtml', '.phar', '.cgi', '.pl', '.asp', '.aspx', '.jsp', '.sh', '.bat', '.cmd'])
+    if (dangerous.has(extLower)) {
+      return NextResponse.json({ success: false, message: 'Forbidden file type' }, { status: 403 })
+    }
     const st = await stat(abs)
     const ifNoneMatch = (req as any).headers.get('if-none-match') || ''
     const ifModifiedSince = (req as any).headers.get('if-modified-since') || ''
@@ -25,13 +31,33 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
     if (ifModifiedSince && new Date(ifModifiedSince).getTime() >= new Date(st.mtime).getTime()) {
       return new NextResponse(null, { status: 304, headers: { 'ETag': etag, 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=31536000, immutable' } })
     }
-    const buf = await readFile(abs)
-    const ext = path.extname(abs).toLowerCase()
+    const ext = extLower
     let ct = 'application/octet-stream'
     if (ext === '.png') ct = 'image/png'
     else if (ext === '.jpg' || ext === '.jpeg') ct = 'image/jpeg'
     else if (ext === '.webp') ct = 'image/webp'
-    return new NextResponse(buf, { headers: { 'Content-Type': ct, 'ETag': etag, 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=31536000, immutable' } })
+    const fileStream = createReadStream(abs)
+    const signal = (req as any).signal
+    if (signal && typeof signal.addEventListener === 'function') {
+      signal.addEventListener('abort', () => {
+        try { fileStream.destroy() } catch {}
+      })
+    }
+    const rs = new ReadableStream<Uint8Array>({
+      start(controller) {
+        fileStream.on('data', (chunk: Buffer | string) => {
+          if (typeof chunk === 'string') {
+            const te = new TextEncoder()
+            controller.enqueue(te.encode(chunk))
+          } else {
+            controller.enqueue(new Uint8Array(chunk))
+          }
+        })
+        fileStream.on('end', () => controller.close())
+        fileStream.on('error', (err) => controller.error(err))
+      }
+    })
+    return new NextResponse(rs, { headers: { 'Content-Type': ct, 'ETag': etag, 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=31536000, immutable' } })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || 'Not Found' }, { status: 404 })
   }
