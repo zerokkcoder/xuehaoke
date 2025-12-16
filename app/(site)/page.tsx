@@ -116,12 +116,14 @@ function HomeInner() {
     if (!autoLoadEnabled) return
     const sentinel = sentinelRef.current
     if (!sentinel) return
-
+    const lastRef = { t: 0 }
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries
-        // 使用全局 hasMore 状态控制是否继续加载
+        const now = Date.now()
+        if (now - lastRef.t < 500) return
         if (entry.isIntersecting && hasMore && !isLoading) {
+          lastRef.t = now
           const nextPage = (lastPageRef.current || 0) + 1
           loadMoreResources(qParamValue, false, undefined, nextPage, true)
         }

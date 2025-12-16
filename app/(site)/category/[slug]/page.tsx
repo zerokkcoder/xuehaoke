@@ -111,7 +111,16 @@ export default function CategoryPage() {
     if (!autoLoadEnabled) return
     const sentinel = sentinelRef.current
     if (!sentinel) return
-    const observer = new IntersectionObserver((entries) => { const [entry] = entries; if (entry.isIntersecting && hasMore && !isLoading) { loadMoreResources() } }, { root: null, rootMargin: '200px', threshold: 0 })
+    const lastRef = { t: 0 }
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries
+      const now = Date.now()
+      if (now - lastRef.t < 500) return
+      if (entry.isIntersecting && hasMore && !isLoading) {
+        lastRef.t = now
+        loadMoreResources()
+      }
+    }, { root: null, rootMargin: '200px', threshold: 0 })
     observer.observe(sentinel)
     return () => observer.disconnect()
   }, [autoLoadEnabled, displayedResources.length, isLoading, page, total])

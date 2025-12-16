@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { useToast } from '@/components/Toast'
 import Image from 'next/image'
 // import { processPayment, generateOrderId, paymentMethods, createPaymentStatus } from '@/lib/payment'
@@ -23,6 +24,7 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
   const [isPolling, setIsPolling] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { toast } = useToast()
+  const pathname = usePathname()
 
 
   const handlePayment = async () => {
@@ -136,6 +138,18 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
       stopPolling()
     }
   }, [isOpen])
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) stopPolling()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
+
+  useEffect(() => {
+    stopPolling()
+  }, [pathname])
 
   if (!isOpen) return null
 

@@ -121,9 +121,13 @@ export default function SubcategoryPage() {
     if (!autoLoadEnabled) return
     const sentinel = sentinelRef.current
     if (!sentinel) return
+    const lastRef = { t: 0 }
     const observer = new IntersectionObserver((entries) => {
       const [entry] = entries
+      const now = Date.now()
+      if (now - lastRef.t < 500) return
       if (entry.isIntersecting && hasMore && !isLoading) {
+        lastRef.t = now
         loadMoreResources()
       }
     }, { root: null, rootMargin: '200px', threshold: 0 })
