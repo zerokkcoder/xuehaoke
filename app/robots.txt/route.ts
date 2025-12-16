@@ -3,9 +3,35 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
-  const proto = req.headers.get('x-forwarded-proto') || 'https'
-  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || new URL(req.url).host
-  const origin = `${proto}://${host}`
+  const envBaseRaw = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || ''
+  const isLocalHost = (h: string) => /^(localhost|127\\.0\\.0\\.1)(:|$)/i.test(h)
+  let origin = ''
+  if (envBaseRaw) {
+    try {
+      const u = new URL(envBaseRaw)
+      if (!isLocalHost(u.host)) {
+        origin = `${u.protocol}//${u.host}`
+      }
+    } catch {}
+  }
+  if (!origin) {
+    const rawProto = (req.headers.get('x-forwarded-proto') || '').split(',')[0].trim()
+    const rawHost = (req.headers.get('x-forwarded-host') || '').split(',')[0].trim()
+    let proto = rawProto || 'https'
+    let host = rawHost || req.headers.get('host') || new URL(req.url).host
+    if (typeof host === 'string' && /^(localhost|127\\.0\\.0\\.1)/i.test(host)) {
+      const vercel = process.env.VERCEL_URL || ''
+      if (vercel) {
+        try {
+          const u = new URL(`https://${vercel}`)
+          host = u.host
+          proto = u.protocol.replace(':', '')
+        } catch {}
+      }
+    }
+    if (typeof host === 'string' && host.endsWith(':443') && proto !== 'https') proto = 'https'
+    origin = `${proto}://${host}`
+  }
   const body = `User-agent: *
 Allow: /
 Disallow: /admin/
