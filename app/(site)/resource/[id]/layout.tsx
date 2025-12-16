@@ -82,7 +82,7 @@ export default async function ResourceLayout(props: any) {
   const imageRaw = r?.cover || site?.siteLogo || '/logo.png'
   const image = imageRaw.startsWith('http') ? imageRaw : `${origin}${imageRaw}`
   const price = Number(r?.price || 0).toFixed(2)
-  const brandName = site?.siteName || '骇课网'
+  const brandName = site?.siteName || '学好课'
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',

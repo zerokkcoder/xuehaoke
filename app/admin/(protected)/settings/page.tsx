@@ -166,11 +166,11 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm text-muted-foreground mb-1">网站名称</label>
-                <input name="siteName" value={settings?.siteName || ''} onChange={handleChange} className="input w-full" placeholder="如：骇课网" />
+                <input name="siteName" value={settings?.siteName || ''} onChange={handleChange} className="input w-full" placeholder="如：学好课" />
               </div>
               <div>
                 <label className="block text-sm text-muted-foreground mb-1">站点副标题（首页 H1）</label>
-                <input name="siteSubtitle" value={settings?.siteSubtitle || ''} onChange={handleChange} className="input w-full" placeholder="如：骇课网，学习更高效" />
+                <input name="siteSubtitle" value={settings?.siteSubtitle || ''} onChange={handleChange} className="input w-full" placeholder="如：学好课，学习更高效" />
               </div>
               <div>
                 <label className="block text-sm text-muted-foreground mb-1">网站 Slogan</label>

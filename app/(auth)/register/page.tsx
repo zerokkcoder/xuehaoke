@@ -209,7 +209,7 @@ export default function RegisterPage() {
         <div className="text-center mb-4">
           <div className="inline-flex items-center gap-2">
             <img src={siteConfig?.siteLogo || '/logo.png'} alt="logo" className="w-8 h-8 object-contain" />
-            <span className="text-lg font-semibold text-foreground">{siteConfig?.siteName || '骇课网'}</span>
+            <span className="text-lg font-semibold text-foreground">{siteConfig?.siteName || '学好课'}</span>
           </div>
         </div>
 

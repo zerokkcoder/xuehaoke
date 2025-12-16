@@ -110,7 +110,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 link">
             <Image src={siteConfig?.siteLogo || '/logo.png'} alt="logo" width={28} height={28} className="object-contain" priority />
-            <span className="text-lg font-semibold">{siteConfig?.siteName || '骇课网'}</span>
+            <span className="text-lg font-semibold">{siteConfig?.siteName || '学好课'}</span>
           </Link>
 
           {/* Desktop Navigation */}
