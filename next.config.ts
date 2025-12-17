@@ -50,6 +50,13 @@ const nextConfig: NextConfig = {
         source: '/api/:path*',
         headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
+      // Prevent HTML caching to avoid stale CSS references after deployment
+      {
+        source: '/((?!api|_next/static|_next/image|favicon.ico|uploads).*)',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, max-age=0, must-revalidate' },
+        ],
+      },
       {
         source: '/(.*)',
         headers: [
