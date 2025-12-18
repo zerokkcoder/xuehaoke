@@ -90,7 +90,7 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify之间">
         <h2 className="text-xl font-semibold text-foreground">用户管理</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center ml-2 gap-2">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索用户名/邮箱" className="input flex-1" />
           <button className="btn btn-secondary" onClick={() => fetchList(1, size, q)}>搜索</button>
         </div>
