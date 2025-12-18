@@ -157,7 +157,7 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <motion.div
-            className="absolute inset-0 bg-black/50"
+            className="fixed inset-0 bg-black"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
