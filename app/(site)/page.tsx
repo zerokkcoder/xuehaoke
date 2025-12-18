@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import ResourceCard from '@/components/ResourceCard'
+import TypewriterText from '@/components/TypewriterText'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid'
 
 function HomeInner() {
@@ -198,7 +199,10 @@ function HomeInner() {
               <div className="w-full text-white">
                 <div className="w-full animate-fadeIn flex flex-col items-center justify-center text-center">
                   <h1 className="text-3xl md:text-4xl font-bold mb-4">{siteConfig?.siteSubtitle || '学好课，卷王必备的资源平台'}</h1>
-                  <p className="text-base md:text-lg mb-4 opacity-90">{siteConfig?.siteSlogan || '海量优质资源，快速检索，一键下载'}</p>
+                  <TypewriterText 
+                    text={siteConfig?.siteSlogan || '海量优质资源，快速检索，一键下载'} 
+                    className="text-base md:text-lg mb-4 opacity-90"
+                  />
                   <form onSubmit={handleSearchSubmit} className="flex items-center justify-center w-11/12 md:w-full md:max-w-md mx-auto bg-white rounded-full shadow">
                     <input
                       type="text"

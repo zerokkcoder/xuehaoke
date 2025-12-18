@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { motion } from "motion/react"
 
 type ResourceCardData = {
   id: number | string
@@ -20,9 +21,12 @@ interface ResourceCardProps {
 export default function ResourceCard({ resource, index = 0 }: ResourceCardProps) {
 
   return (
-    <div 
-      className="card cursor-pointer animate-fadeIn"
-      style={{ animationDelay: `${index * 0.1}s` }}
+    <motion.div 
+      className="card cursor-pointer"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
     >
       {/* Split layout: image top, text bottom */}
       <div className="flex flex-col h-48 md:h-56">
@@ -57,6 +61,6 @@ export default function ResourceCard({ resource, index = 0 }: ResourceCardProps)
           </Link>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

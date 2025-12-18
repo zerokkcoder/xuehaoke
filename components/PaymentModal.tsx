@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useToast } from '@/components/Toast'
 import Image from 'next/image'
+import { motion, AnimatePresence } from "motion/react"
 // import { processPayment, generateOrderId, paymentMethods, createPaymentStatus } from '@/lib/payment'
 
 interface PaymentModalProps {
@@ -151,11 +152,24 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
     stopPolling()
   }, [pathname])
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-card border border-border rounded-lg max-w-md w-full p-6 text-foreground">
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <motion.div
+            className="absolute inset-0 bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+          <motion.div
+            className="relative bg-card border border-border rounded-lg max-w-md w-full p-6 text-foreground shadow-xl"
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: "spring", duration: 0.3, bounce: 0.3 }}
+          >
         {paymentStep === 'select' && (
           <>
             <div className="flex justify-between items-center mb-6">
@@ -284,17 +298,19 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
         )}
 
         {paymentStep === 'success' && (
-          <div className="text-center py-8">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-              <span className="text-2xl">✅</span>
-            </div>
-            <p className="text-foreground font-medium mb-1">支付完成</p>
-            {paymentData.outTradeNo && (
-              <p className="text-sm text-muted-foreground">订单号：{paymentData.outTradeNo}</p>
+              <div className="text-center py-8">
+                <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <span className="text-2xl">✅</span>
+                </div>
+                <p className="text-foreground font-medium mb-1">支付完成</p>
+                {paymentData.outTradeNo && (
+                  <p className="text-sm text-muted-foreground">订单号：{paymentData.outTradeNo}</p>
+                )}
+              </div>
             )}
-          </div>
-        )}
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   )
 }
