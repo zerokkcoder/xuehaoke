@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import pkg from '../../../package.json'
 
 export default function AdminPage() {
   const [me, setMe] = useState<{ username: string; role: string } | null>(null)
@@ -111,11 +112,11 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div className="rounded bg-secondary/50 px-4 py-3">
                 <div className="text-muted-foreground">当前环境</div>
-                <div className="text-foreground">开发环境</div>
+                <div className="text-foreground">{process.env.NODE_ENV === 'production' ? '生产环境' : process.env.NODE_ENV === 'development' ? '开发环境' : String(process.env.NODE_ENV || '')}</div>
               </div>
               <div className="rounded bg-secondary/50 px-4 py-3">
                 <div className="text-muted-foreground">版本</div>
-                <div className="text-foreground">v0.1.0</div>
+                <div className="text-foreground">v{pkg.version}</div>
               </div>
             </div>
           </section>
