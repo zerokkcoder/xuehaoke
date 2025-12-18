@@ -77,6 +77,8 @@ export default function AdminResourcesPage() {
   const [total, setTotal] = useState(0)
   const [cats, setCats] = useState<CatItem[]>([])
   const [subs, setSubs] = useState<SubItem[]>([])
+  const [qInput, setQInput] = useState('')
+  const [q, setQ] = useState('')
 
   const [modalOpen, setModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -99,9 +101,11 @@ export default function AdminResourcesPage() {
 
   const previewHtml = useMemo(() => ({ __html: renderMd(content) }), [content])
 
-  const fetchList = async (p = page, s = size) => {
+  const fetchList = async (p = page, s = size, query = q) => {
     setLoading(true)
-    const res = await fetch(`/api/admin/resources?page=${p}&size=${s}`)
+    const params = new URLSearchParams({ page: String(p), size: String(s) })
+    if (query && query.trim()) params.set('q', query.trim())
+    const res = await fetch(`/api/admin/resources?` + params.toString())
     const data = await res.json()
     setList(data?.data || [])
     const pg = data?.pagination
@@ -185,7 +189,18 @@ export default function AdminResourcesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-foreground">资源管理</h2>
-        <button onClick={openCreate} className="btn btn-primary">新增资源</button>
+        <div className="flex items-center gap-2">
+          <input
+            value={qInput}
+            onChange={(e) => setQInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); setQ(qInput.trim()); fetchList(1, size, qInput.trim()) } }}
+            placeholder="搜索标题/内容/标签/链接"
+            className="input"
+            style={{ width: 260 }}
+          />
+          <button className="btn btn-secondary" onClick={() => { setPage(1); setQ(qInput.trim()); fetchList(1, size, qInput.trim()) }}>搜索</button>
+          <button onClick={openCreate} className="btn btn-primary">新增资源</button>
+        </div>
       </div>
 
       <div className="bg-card rounded-lg shadow-sm">

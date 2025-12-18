@@ -23,9 +23,19 @@ export async function GET(req: Request) {
   const page = Math.max(1, Number(url.searchParams.get('page')) || 1)
   const size = Math.max(1, Math.min(100, Number(url.searchParams.get('size')) || 10))
   const skip = (page - 1) * size
+  const q = String(url.searchParams.get('q') || '').trim()
+  const where = q ? {
+    OR: [
+      { title: { contains: q } },
+      { content: { contains: q } },
+      { downloads: { some: { url: { contains: q } } } },
+      { tags: { some: { tag: { name: { contains: q } } } } },
+    ],
+  } : undefined
   const [total, resources] = await Promise.all([
-    prisma.resource.count(),
+    prisma.resource.count({ where }),
     prisma.resource.findMany({
+      where,
       orderBy: [{ id: 'desc' }],
       include: {
         category: { select: { id: true, name: true } },
