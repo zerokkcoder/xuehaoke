@@ -249,6 +249,9 @@ export default function Header({ currentUser, initialCategories = [], initialSit
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 rounded-md text-foreground hover:text-primary hover:bg-secondary"
+              aria-label={isMenuOpen ? '关闭菜单' : '打开菜单'}
+              aria-expanded={isMenuOpen ? 'true' : 'false'}
+              aria-controls="mobile-menu"
             >
               {isMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
             </button>
@@ -257,7 +260,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-border py-4">
+          <div id="mobile-menu" className="md:hidden border-t border-border py-4">
             <div className="space-y-2">
               {navCategories.map((category) => (
                 <div key={category.id}>
