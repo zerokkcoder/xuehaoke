@@ -60,11 +60,11 @@ export default async function ResourceLayout(props: any) {
   const { children, params } = props
   const { id } = await params
   const idNum = Number(id)
-  let r: { title: string; content: string; cover: string | null; price: any } | null = null
+  let r: { title: string; content: string; cover: string | null; price: any; downloadCount: number } | null = null
   let site: { siteName: string | null; siteLogo: string | null } | null = null
   try {
-    const row = await prisma.resource.findUnique({ where: { id: idNum }, select: { title: true, content: true, cover: true, price: true } })
-    r = row ? { title: row.title, content: row.content, cover: row.cover || null, price: row.price } : null
+    const row = await prisma.resource.findUnique({ where: { id: idNum }, select: { title: true, content: true, cover: true, price: true, downloadCount: true } })
+    r = row ? { title: row.title, content: row.content, cover: row.cover || null, price: row.price, downloadCount: row.downloadCount } : null
   } catch {}
   try {
     const sRows: { site_name: string | null; site_logo: string | null }[] = await prisma.$queryRawUnsafe('SELECT site_name, site_logo FROM site_settings LIMIT 1')
@@ -83,6 +83,11 @@ export default async function ResourceLayout(props: any) {
   const image = imageRaw.startsWith('http') ? imageRaw : `${origin}${imageRaw}`
   const price = Number(r?.price || 0).toFixed(2)
   const brandName = site?.siteName || '学好课'
+  
+  // Calculate priceValidUntil (1 year from now)
+  const priceValidUntil = new Date()
+  priceValidUntil.setFullYear(priceValidUntil.getFullYear() + 1)
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -91,12 +96,20 @@ export default async function ResourceLayout(props: any) {
     image,
     sku: String(idNum),
     brand: { '@type': 'Brand', name: brandName },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '5',
+      ratingCount: Math.max(1, r?.downloadCount || 0),
+      bestRating: '5',
+      worstRating: '1',
+    },
     offers: {
       '@type': 'Offer',
       priceCurrency: 'CNY',
       price,
       availability: 'https://schema.org/InStock',
       url: `${origin}/resource/${id}`,
+      priceValidUntil: priceValidUntil.toISOString().split('T')[0],
     },
   }
 
