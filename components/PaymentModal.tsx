@@ -162,6 +162,7 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
+            aria-hidden="true"
           />
           <motion.div
             className="relative bg-card border border-border rounded-lg max-w-md w-full p-6 text-foreground shadow-xl"
@@ -169,12 +170,15 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: "spring", duration: 0.3, bounce: 0.3 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="payment-modal-title"
           >
         {paymentStep === 'select' && (
           <>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-foreground">选择支付方式</h2>
-              <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+              <h2 id="payment-modal-title" className="text-xl font-semibold text-foreground">选择支付方式</h2>
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="关闭支付弹窗">
                 ✕
               </button>
             </div>
@@ -239,8 +243,8 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
         {paymentStep === 'qr' && (
           <>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-foreground">扫码支付</h2>
-              <button onClick={handleCancel} className="text-muted-foreground hover:text-foreground">
+              <h2 id="payment-modal-title" className="text-xl font-semibold text-foreground">扫码支付</h2>
+              <button onClick={handleCancel} className="text-muted-foreground hover:text-foreground" aria-label="关闭支付弹窗">
                 ✕
               </button>
             </div>
