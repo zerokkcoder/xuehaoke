@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   if (!origin) {
     const rawProto = (req.headers.get('x-forwarded-proto') || '').split(',')[0].trim()
     const rawHost = (req.headers.get('x-forwarded-host') || '').split(',')[0].trim()
-    let proto = rawProto || 'https'
+    let proto = rawProto || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     let host = rawHost || req.headers.get('host') || new URL(req.url).host
     if (typeof host === 'string' && /^(localhost|127\\.0\\.0\\.1)/i.test(host)) {
       const vercel = process.env.VERCEL_URL || ''
@@ -28,6 +28,10 @@ export async function GET(req: Request) {
           proto = u.protocol.replace(':', '')
         } catch {}
       }
+    }
+    // Force HTTPS in production if not localhost
+    if (process.env.NODE_ENV === 'production' && typeof host === 'string' && !isLocalHost(host) && proto === 'http') {
+      proto = 'https'
     }
     if (typeof host === 'string' && host.endsWith(':443') && proto !== 'https') proto = 'https'
     origin = `${proto}://${host}`

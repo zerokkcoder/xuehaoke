@@ -9,14 +9,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const r = await prisma.resource.findUnique({ where: { id: idNum }, select: { title: true, content: true, cover: true, category: { select: { name: true } }, subcategory: { select: { name: true } } } })
     if (!r) {
       const hs = await headers()
-      const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+      let proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
       const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+      if (process.env.NODE_ENV === 'production' && proto === 'http' && host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+        proto = 'https'
+      }
       const origin = host ? `${proto}://${host}` : 'https://example.com'
       return { title: '资源未找到', alternates: { canonical: `${origin}/resource/${id}` }, robots: { index: true, follow: true } }
     }
     const hs = await headers()
-    const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    let proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+    if (process.env.NODE_ENV === 'production' && proto === 'http' && host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+      proto = 'https'
+    }
     const origin = host ? `${proto}://${host}` : 'https://example.com'
     const title = `${r.title} - 资源下载`
     const twitterTitle = r.title
@@ -46,8 +52,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
   } catch {
     const hs = await headers()
-    const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    let proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+    if (process.env.NODE_ENV === 'production' && proto === 'http' && host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+      proto = 'https'
+    }
     const origin = host ? `${proto}://${host}` : 'https://example.com'
     const { id: id2 } = await params
     return { title: '资源详情', alternates: { canonical: `${origin}/resource/${id2}` }, robots: { index: true, follow: true } }
@@ -74,8 +83,11 @@ export default async function ResourceLayout(props: any) {
 
   const hs = await headers()
   const nonce = hs.get('x-nonce') || undefined
-  const proto = hs.get('x-forwarded-proto') || 'https'
+  let proto = hs.get('x-forwarded-proto') || 'https'
   const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+  if (process.env.NODE_ENV === 'production' && proto === 'http' && host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+    proto = 'https'
+  }
   const origin = host ? `${proto}://${host}` : 'https://example.com'
   const name = r?.title || '资源详情'
   const description = (r?.content || '').replace(/\s+/g, ' ').slice(0, 160)
