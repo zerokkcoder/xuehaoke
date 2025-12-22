@@ -484,7 +484,7 @@ export default function ResourceDetailPage() {
             <div className="space-y-6">
               {(serverAuthorized || hasAccess) ? (
               <div className="bg-card rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">资源下载</h3>
+                <h2 className="text-lg font-semibold text-foreground mb-4">资源下载</h2>
                 <div className="text-sm text-muted-foreground mb-2">链接:</div>
                 <a
                   href={resource.downloadUrl}
@@ -541,7 +541,7 @@ export default function ResourceDetailPage() {
 
             {/* Hot Tags */}
             <div className="bg-card rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">热门标签</h3>
+              <h2 className="text-lg font-semibold text-foreground mb-4">热门标签</h2>
               <div className="flex flex-wrap gap-2">
                 {hotTags.map((tag, idx) => (
                   tag.slug && !/^\d+$/.test(tag.slug) ? (

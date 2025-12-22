@@ -55,9 +55,9 @@ export default function ResourceCard({ resource, index = 0 }: ResourceCardProps)
             </div>
           )}
           <Link href={`/resource/${resource.id}`} className="text-foreground hover:text-primary">
-            <h3 className="text-sm md:text-base font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-colors" title={resource.title}>
+            <h2 className="text-sm md:text-base font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-colors" title={resource.title}>
               {resource.title}
-            </h3>
+            </h2>
           </Link>
         </div>
       </div>
