@@ -149,7 +149,7 @@ export default function CategoryPage() {
 
   if (!category) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items中心 justify中心">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">分类未找到</h1>
           <Link href="/" className="text-primary hover:underline">
@@ -161,10 +161,10 @@ export default function CategoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 pb-8">
         <section className="mb-6">
-          <div className="relative w-screen left-1/2 -translate-x-1/2 h-48 md:h-64 overflow-hidden border border-border bg-card">
+          <div className="relative w-full h-48 md:h-64 overflow-hidden card">
             <Image src={siteConfig?.heroImage || "/haike_hero.svg"} alt="Category Hero" fill className="object-cover" priority />
             <div className="absolute inset-0 bg-black/35" />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -176,7 +176,7 @@ export default function CategoryPage() {
           </div>
         </section>
 
-        <div className="rounded-lg border border-border bg-card p-3 text-sm mt-4">
+        <div className="card p-3 text-sm mt-4">
           <div className="flex items-center flex-wrap gap-2 mb-2">
             <span className="text-muted-foreground">分类</span>
             <Link href={`/category/${category?.slug}`} className="px-2 py-0.5 rounded-full bg-violet-500 text-white">全部</Link>

@@ -69,8 +69,8 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-card rounded-lg shadow p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="w-full max-w-md card p-6">
         <h1 className="text-2xl font-bold text-foreground mb-4">找回密码</h1>
         {step === 'request' && (
           <>

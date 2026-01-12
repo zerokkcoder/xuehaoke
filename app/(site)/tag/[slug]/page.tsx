@@ -134,11 +134,11 @@ export default function TagPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 pb-8">
         {/* Hero section, no filter card below */}
         <section className="mb-6">
-          <div className="relative w-screen left-1/2 -translate-x-1/2 h-48 md:h-64 overflow-hidden border border-border bg-card">
+          <div className="relative w-full h-48 md:h-64 overflow-hidden card">
             <Image
               src={siteConfig?.heroImage || "/haike_hero.svg"}
               alt="Tag Hero"

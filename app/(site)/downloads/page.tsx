@@ -78,7 +78,7 @@ export default function DownloadsPage() {
 
   if (!username) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-3">请登录后查看下载记录</h1>
           <Link href="/login" className="btn btn-accent inline-block">前往登录</Link>
@@ -88,11 +88,11 @@ export default function DownloadsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 pb-8">
         {/* Hero */}
         <section className="mb-6">
-          <div className="relative w-screen left-1/2 -translate-x-1/2 h-40 md:h-52 overflow-hidden border border-border bg-card">
+          <div className="relative w-full h-40 md:h-52 overflow-hidden card">
             <Image
               src={siteConfig?.heroImage || "/haike_hero.svg"}
               alt="Downloads Hero"

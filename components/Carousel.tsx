@@ -45,7 +45,7 @@ export default function Carousel({ slides, autoPlay = true, interval = 5000 }: C
   }
 
   return (
-    <div className="relative w-full h-72 overflow-hidden rounded-lg border border-border bg-card">
+    <div className="relative w-full h-72 overflow-hidden card">
       {/* Slides */}
       <div 
         className="flex transition-transform duration-500 ease-in-out h-full"

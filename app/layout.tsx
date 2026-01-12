@@ -28,13 +28,13 @@ export async function generateMetadata(): Promise<Metadata> {
     const hs = await headers()
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     const host = hs.get('x-forwarded-host') || hs.get('host') || ''
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : 'http://localhost:3000')
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : 'https://www.xuehaoke.top')
     return { title, description, keywords, metadataBase: new URL(origin) }
   } catch {
     const hs = await headers()
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     const host = hs.get('x-forwarded-host') || hs.get('host') || ''
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : 'http://localhost:3000')
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : 'https://www.xuehaoke.top')
     return {
       title: "学好课 - 专业资源下载平台",
       description: "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。",

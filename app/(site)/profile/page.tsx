@@ -152,7 +152,7 @@ export default function ProfilePage() {
 
   if (!localUser) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-3">请登录后查看个人中心</h1>
           <Link href="/login" className="btn btn-accent inline-block">前往登录</Link>
@@ -162,11 +162,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 pb-8">
         {/* Hero */}
         <section className="mb-6">
-          <div className="relative w-screen left-1/2 -translate-x-1/2 h-40 md:h-52 overflow-hidden border border-border bg-card">
+          <div className="relative w-full h-40 md:h-52 overflow-hidden card">
             <Image
               src={siteConfig?.heroImage || "/haike_hero.svg"}
               alt="Profile Hero"
@@ -187,7 +187,7 @@ export default function ProfilePage() {
         {/* Mobile menu toggle */}
         <div className="flex items-center justify-between mb-4 md:hidden">
           <button
-            className="px-3 py-2 rounded-md bg-card border border-border text-foreground"
+            className="px-3 py-2 card text-foreground"
             onClick={() => setMenuOpen(true)}
             aria-label="打开菜单"
           >
@@ -200,7 +200,7 @@ export default function ProfilePage() {
         <div className="flex gap-6">
           {/* Left menu */}
           <aside className="hidden md:block w-56 md:w-64 shrink-0 sticky top-20">
-            <div className="bg-card rounded-lg border border-border p-2">
+            <div className="card p-2">
               {(['overview','avatar','info','downloads','orders'] as const).map(key => (
                 <button
                   key={key}
@@ -217,7 +217,7 @@ export default function ProfilePage() {
           {menuOpen && (
             <div className="fixed inset-0 z-50 md:hidden">
               <div className="absolute inset-0 bg-black/30" onClick={() => setMenuOpen(false)} />
-              <aside className="absolute left-0 top-0 h-full w-64 bg-card border-r border-border p-2">
+              <aside className="absolute left-0 top-0 h-full w-64 card rounded-none border-r border-border p-2">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold">菜单</span>
                   <button className="px-2 py-1 rounded-md bg-secondary text-foreground" onClick={() => setMenuOpen(false)} aria-label="关闭菜单">关闭</button>
@@ -240,7 +240,7 @@ export default function ProfilePage() {
             {activeTab === 'overview' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* 基本信息卡片（概览） */}
-                <div className="bg-card rounded-lg border border-border p-4">
+                <div className="card p-4">
                   <h2 className="text-lg font-semibold text-foreground mb-3">基本信息</h2>
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <div>用户名：<span className="text-foreground font-medium">{localUser.username}</span></div>
@@ -262,7 +262,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 {/* 最近下载简版（概览） */}
-                <div className="bg-card rounded-lg border border-border p-4">
+                <div className="card p-4">
                   <h2 className="text-lg font-semibold text-foreground mb-3">最近下载</h2>
                   {recentDownloads.length === 0 ? (
                     <div className="text-sm text-muted-foreground">暂无记录</div>
@@ -287,7 +287,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'avatar' && (
-              <div className="bg-card rounded-lg border border-border p-4">
+              <div className="card p-4">
                 <h2 className="text-lg font-semibold text-foreground mb-3">我的头像</h2>
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full overflow-hidden border border-border bg-white">
@@ -309,7 +309,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'info' && (
-              <div className="bg-card rounded-lg border border-border p-4">
+              <div className="card p-4">
                 <h2 className="text-lg font-semibold text-foreground mb-3">基本信息</h2>
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <div>用户名：<span className="text-foreground font-medium">{localUser.username}</span></div>
@@ -338,7 +338,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'downloads' && (
-              <div className="bg-card rounded-lg border border-border p-4">
+              <div className="card p-4">
                 <h2 className="text-lg font-semibold text-foreground mb-3">我的下载</h2>
                 <p className="text-sm text-muted-foreground mb-2">查看你的下载记录，以及每日下载额度。</p>
                 <div className="flex items-center gap-2">
@@ -355,7 +355,7 @@ export default function ProfilePage() {
                   <div className="mt-4">
                     <h3 className="text-sm font-semibold text-foreground mb-2">最近下载</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {recentDownloads.slice(0, 6).map((d, idx) => (
+                      {recentDownloads.map((d, idx) => (
                         <div key={`${d.resourceId}-${d.accessedAt}`} className="flex items-center gap-3 p-2 border border-border rounded-md">
                           <div className="relative w-16 h-12 overflow-hidden rounded bg-white">
                             <Image src={d.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=320&h=240&fit=crop'} alt={d.title} fill className="object-cover" />
@@ -373,7 +373,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'orders' && (
-              <div className="bg-card rounded-lg border border-border p-4">
+              <div className="card p-4">
                 <h2 className="text-lg font-semibold text-foreground mb-3">订单记录</h2>
                 {orders.length === 0 ? (
                   <div className="text-sm text-muted-foreground">暂无订单</div>

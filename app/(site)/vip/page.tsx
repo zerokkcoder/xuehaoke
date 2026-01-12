@@ -106,7 +106,7 @@ export default function VIPPage() {
             ) : plans.map((plan) => (
               <div
                 key={plan.id}
-                className={`relative bg-card rounded-lg border p-8 transition-all duration-300 hover:shadow-lg ${
+                className={`relative card p-8 transition-all duration-300 hover:shadow-lg ${
                   plan.isPopular ? 'border-purple-500 ring-1 ring-purple-300' : 'border-border'
                 } w-full sm:w-[360px]`}
               >

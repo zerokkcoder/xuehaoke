@@ -150,10 +150,10 @@ export default function SubcategoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 pb-8">
         <section className="mb-6">
-          <div className="relative w-screen left-1/2 -translate-x-1/2 h-48 md:h-64 overflow-hidden border border-border bg-card">
+          <div className="relative w-full h-48 md:h-64 overflow-hidden card">
             <Image
               src={siteConfig?.heroImage || "/haike_hero.svg"}
               alt="Subcategory Hero"
@@ -171,7 +171,7 @@ export default function SubcategoryPage() {
           </div>
         </section>
 
-        <div className="rounded-lg border border-border bg-card p-3 text-sm mt-4">
+        <div className="card p-3 text-sm mt-4">
           <div className="flex items-center gap-3">
             <span className="text-muted-foreground">排序</span>
             <button onClick={() => handleSortChange('latest')} className={`px-2 py-0.5 rounded-full ${sort==='latest' ? 'bg-violet-500 text-white' : 'text-black'}`}>最新发布</button>

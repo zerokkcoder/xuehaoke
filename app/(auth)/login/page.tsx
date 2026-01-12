@@ -90,7 +90,7 @@ export default function LoginPage() {
             <span className="text-lg font-semibold text-foreground">{siteConfig?.siteName || '学好课'}</span>
           </div>
         </div>
-        <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
+        <div className="card p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">用户名或邮箱</label>

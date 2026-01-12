@@ -181,11 +181,11 @@ function HomeInner() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Hero Section with Static Image, Title, Description, and Search */}
       {!showSearchView && (
         <section>
-          <div className="relative w-full h-64 md:h-72 overflow-hidden rounded-lg border border-border bg-card">
+          <div className="relative w-full h-64 md:h-72 overflow-hidden card">
             <Image
               src={siteConfig?.heroImage || "/haike_hero.svg"}
               alt="Hero"
@@ -224,7 +224,7 @@ function HomeInner() {
 
       {showSearchView && (
         <section>
-          <div className="relative w-full h-40 md:h-48 overflow-hidden rounded-lg border border-border bg-card">
+          <div className="relative w-full h-40 md:h-48 overflow-hidden card">
             <Image
               src={siteConfig?.heroImage || "/haike_hero.svg"}
               alt="Search Header"
@@ -252,7 +252,7 @@ function HomeInner() {
             </div>
           </div>
           <div className="container mx-auto mt-6!">
-            <div className="rounded-lg border border-border bg-card p-3 text-sm">
+            <div className="card p-3 text-sm">
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-muted-foreground">分类</span>
                 <span className="px-2 py-0.5 rounded-full bg-violet-500 text-white">全部</span>
@@ -297,6 +297,7 @@ function HomeInner() {
 }
 
 export default function Home() {
+  // 强制刷新：修复 Hydration Mismatch
   return (
     <Suspense
       fallback={

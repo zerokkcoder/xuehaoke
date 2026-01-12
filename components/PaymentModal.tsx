@@ -165,7 +165,7 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
             aria-hidden="true"
           />
           <motion.div
-            className="relative bg-card border border-border rounded-lg max-w-md w-full p-6 text-foreground shadow-xl"
+            className="relative card max-w-md w-full p-6 text-foreground shadow-xl"
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}

@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm bg-card rounded-lg shadow-sm border p-6">
+      <div className="w-full max-w-sm card p-6">
         <h1 className="text-xl font-semibold text-foreground mb-4">后台登录</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

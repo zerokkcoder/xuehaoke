@@ -270,7 +270,7 @@ export default function ResourceDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
@@ -295,7 +295,7 @@ export default function ResourceDetailPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Resource Header */}
-            <div className="bg-card rounded-lg shadow-sm p-6 mb-6">
+            <div className="card p-6 mb-6">
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 {resource.isNew && (
                   <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
@@ -443,7 +443,7 @@ export default function ResourceDetailPage() {
             </div>
 
             {/* Prev/Next navigation */}
-              <div className="py-4 px-2 md:px-4 bg-card rounded-lg shadow-sm">
+              <div className="py-4 px-2 md:px-4 card">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     {prevNext.prev && (
@@ -470,7 +470,7 @@ export default function ResourceDetailPage() {
               </div>
 
               {/* Guess you like (separate block) */}
-              <div className="py-4 px-2 md:px-4 bg-card rounded-lg shadow-sm mt-4">
+              <div className="py-4 px-2 md:px-4 card mt-4">
                 <div className="text-sm text-foreground font-bold mb-2">猜你喜欢</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {guessList.map((res, idx) => (
@@ -483,7 +483,7 @@ export default function ResourceDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {(serverAuthorized || hasAccess) ? (
-              <div className="bg-card rounded-lg shadow-sm p-6">
+              <div className="card p-6">
                 <h2 className="text-lg font-semibold text-foreground mb-4">资源下载</h2>
                 <div className="text-sm text-muted-foreground mb-2">链接:</div>
                 <a
@@ -500,7 +500,7 @@ export default function ResourceDetailPage() {
               </div>
 
               ) : (
-              <div className="bg-card rounded-lg shadow-sm p-6">
+              <div className="card p-6">
                 <div className="text-center mb-2">
                   <span className="text-4xl font-bold text-violet-500">{resource.price}</span>
                   <span className="ml-1 text-base text-foreground">元</span>
@@ -524,7 +524,7 @@ export default function ResourceDetailPage() {
               )}
 
             {/* Latest Articles */}
-            <div className="bg-card rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">最新文章</h3>
               <div className="space-y-2">
                 {latestArticles.map((r) => (
@@ -540,7 +540,7 @@ export default function ResourceDetailPage() {
             </div>
 
             {/* Hot Tags */}
-            <div className="bg-card rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h2 className="text-lg font-semibold text-foreground mb-4">热门标签</h2>
               <div className="flex flex-wrap gap-2">
                 {hotTags.map((tag, idx) => (
@@ -572,7 +572,7 @@ export default function ResourceDetailPage() {
       {/* Download Modal */}
       {showDownloadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="card p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-foreground mb-4">VIP专享资源</h3>
             <p className="text-muted-foreground mb-6">
               此资源为VIP专享，需要开通VIP会员才能下载。

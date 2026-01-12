@@ -78,10 +78,10 @@ export default function FavoritesPage() {
 
   if (userVip === null) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">网盘资源</h1>
-          <div className="bg-card rounded-lg shadow-sm p-6">
+          <div className="card p-6">
             <div className="text-muted-foreground">检测中...</div>
           </div>
         </div>
@@ -91,10 +91,10 @@ export default function FavoritesPage() {
 
   if (!userVip) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">网盘资源</h1>
-          <div className="bg-card rounded-lg shadow-sm p-6">
+          <div className="card p-6">
             <div className="text-muted-foreground">此页面仅对VIP用户可见</div>
           </div>
         </div>
@@ -103,10 +103,10 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">网盘资源</h1>
-        <div className="bg-card rounded-lg shadow-sm p-6">
+        <div className="card p-6">
           <div className="flex items-center gap-2 mb-4">
             <input
               value={qInput}
