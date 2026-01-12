@@ -27,19 +27,20 @@ export async function generateMetadata(): Promise<Metadata> {
     const keywords = r?.site_keywords || "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计"
     const hs = await headers()
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
-    const host = hs.get('x-forwarded-host') || hs.get('host') || ''
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : 'https://www.xuehaoke.top')
-    return { title, description, keywords, metadataBase: new URL(origin) }
+    // const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+    // 强制使用生产环境域名作为 metadataBase，解决 canonical 和索引问题
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    return { title, description, keywords, metadataBase: new URL(siteUrl) }
   } catch {
     const hs = await headers()
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
-    const host = hs.get('x-forwarded-host') || hs.get('host') || ''
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : 'https://www.xuehaoke.top')
+    // const host = hs.get('x-forwarded-host') || hs.get('host') || ''
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
     return {
       title: "学好课 - 专业资源下载平台",
       description: "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。",
       keywords: "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计",
-      metadataBase: new URL(origin),
+      metadataBase: new URL(siteUrl),
     }
   }
 }
