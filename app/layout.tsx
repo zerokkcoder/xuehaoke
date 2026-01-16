@@ -4,7 +4,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
 import { headers } from "next/headers";
-// Root layout: keep minimal to allow route groups to define their own layouts
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/** 生成站点全局默认元数据配置 */
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const rows: any[] = await prisma.$queryRawUnsafe('SELECT site_name, site_description, site_keywords FROM site_settings LIMIT 1')
@@ -52,6 +52,7 @@ export const viewport: Viewport = {
   themeColor: '#ffffff',
 }
 
+/** 根布局组件，挂载全局样式与结构化数据 */
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -59,6 +60,8 @@ export default async function RootLayout({
 }>) {
   const hs = await headers()
   const nonce = hs.get('x-nonce') || undefined
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+  const organizationLogo = `${siteUrl}/logo.png`
   return (
     <html lang="zh">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
@@ -71,8 +74,8 @@ export default async function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "学好课",
-              url: "/",
-              logo: "/logo.png",
+              url: siteUrl,
+              logo: organizationLogo,
             }),
           }}
         />
