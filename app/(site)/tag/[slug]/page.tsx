@@ -1,191 +1,69 @@
-'use client'
+import { notFound } from 'next/navigation'
+import prisma from '@/lib/prisma'
+import TagDetailClient from './TagDetailClient'
 
-import { useEffect, useRef, useState } from 'react'
-import { useParams } from 'next/navigation'
-import Image from 'next/image'
-import ResourceCard from '@/components/ResourceCard'
+export const revalidate = 3600 // ISR cache for 1 hour
 
-export default function TagPage() {
-  const params = useParams()
-  const tagParam = params.slug as string
-  const tagSlug = tagParam
+export default async function TagPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const tagSlug = decodeURIComponent(slug)
 
-  const [tagName, setTagName] = useState<string>('标签')
-  const [displayedResources, setDisplayedResources] = useState<{ id: number; coverImage: string; title: string; category: string }[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [page, setPage] = useState(1)
-  const [size] = useState(6)
-  const [total, setTotal] = useState(0)
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
-  const lastPageRef = useRef(0)
-  const loadedIdsRef = useRef<Set<number>>(new Set())
-  const [hasMore, setHasMore] = useState(true)
-  const [autoLoadEnabled, setAutoLoadEnabled] = useState(false)
-  const [sort, setSort] = useState<'latest' | 'downloads' | 'views'>('latest')
-  const [siteConfig, setSiteConfig] = useState<{ heroImage?: string | null } | null>(null)
+  // 1. Fetch tag info
+  const tag = await prisma.tag.findFirst({
+    where: { slug: tagSlug },
+  })
 
-  useEffect(() => {
-    const controller = new AbortController()
-    const load = async () => {
-      try {
-        const res = await fetch('/api/site/settings', { signal: controller.signal, cache: 'no-store' })
-        const json = await res.json().catch(() => ({}))
-        if (res.ok && json?.success) setSiteConfig(json.data)
-      } catch {}
-    }
-    load()
-    return () => controller.abort()
-  }, [])
-
-  useEffect(() => {
-    const loadTagName = async () => {
-      try {
-        const res = await fetch('/api/tags')
-        const json = await res.json().catch(() => null)
-        if (res.ok && json?.success) {
-          const list = Array.isArray(json.data) ? json.data : []
-          const found = list.find((t: any) => String(t.slug || '') === tagSlug)
-          setTagName(found?.name || '标签')
-        }
-      } catch {}
-    }
-    loadTagName()
-  }, [tagParam])
-
-  const loadMoreResources = async (sortOverride?: 'latest' | 'downloads' | 'views', pageOverride?: number, force?: boolean) => {
-    if ((isLoading || !hasMore) && !force) return
-    setIsLoading(true)
-    let computedTotal = 0
-    let nextHasMoreFlag = false
-    try {
-      const requestedPage = pageOverride ?? page
-      if (requestedPage === lastPageRef.current) { setIsLoading(false); return }
-      const activeSort = sortOverride ?? sort
-      const url = `/api/resources?page=${requestedPage}&size=${size}&tagSlug=${encodeURIComponent(tagSlug)}&sort=${activeSort}`
-      const res = await fetch(url)
-      if (!res.ok) { setIsLoading(false); return }
-      let data: any = null
-      try { data = await res.json() } catch { setIsLoading(false); return }
-      const list = Array.isArray(data?.data) ? data.data : []
-      const pg = data?.pagination; if (pg) { computedTotal = pg.total || 0; setTotal(computedTotal) }
-      if (list.length === 0) {
-        lastPageRef.current = requestedPage
-        setPage(requestedPage + 1)
-        setIsLoading(false)
-        return
-      }
-      const next = list.map((r: any) => ({ id: r.id, title: r.title, coverImage: r.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&h=600&fit=crop', category: r.subcategoryName || r.categoryName || '其他', categorySlug: r.categorySlug || null, subcategorySlug: r.subcategorySlug || null }))
-      const filtered = next.filter((item: { id: number }) => !loadedIdsRef.current.has(item.id))
-      filtered.forEach((item: { id: number }) => loadedIdsRef.current.add(item.id))
-      setDisplayedResources(prev => [...prev, ...filtered])
-      const loadedCount = loadedIdsRef.current.size
-      nextHasMoreFlag = (filtered.length > 0) && (computedTotal === 0 || loadedCount < computedTotal)
-      lastPageRef.current = requestedPage
-      if (nextHasMoreFlag) { setPage(requestedPage + 1) } else { setAutoLoadEnabled(false); setTotal(loadedCount) }
-    } catch {} finally {
-      setIsLoading(false)
-      setHasMore(nextHasMoreFlag)
-      setAutoLoadEnabled(nextHasMoreFlag && computedTotal > 0)
-    }
+  if (!tag) {
+    return notFound()
   }
 
-  useEffect(() => {
-    setDisplayedResources([])
-    setTotal(0)
-    setPage(1)
-    lastPageRef.current = 0
-    loadedIdsRef.current.clear()
-    setHasMore(true)
-    setAutoLoadEnabled(false)
-    setIsLoading(false)
-    ;(async () => { await loadMoreResources(sort, 1, true) })()
-  }, [tagParam, sort])
+  // 2. Fetch site settings (mimic /api/site/settings logic)
+  let siteConfig = null
+  try {
+    const rows: any[] = await prisma.$queryRawUnsafe('SELECT hero_image FROM site_settings LIMIT 1')
+    const r = rows?.[0]
+    if (r) {
+      siteConfig = { heroImage: r.hero_image ?? null }
+    }
+  } catch {}
 
-  useEffect(() => {
-    if (!autoLoadEnabled) return
-    const sentinel = sentinelRef.current
-    if (!sentinel) return
-    const lastRef = { t: 0 }
-    const observer = new IntersectionObserver((entries) => {
-      const [entry] = entries
-      const now = Date.now()
-      if (now - lastRef.t < 500) return
-      if (entry.isIntersecting && hasMore && !isLoading) {
-        lastRef.t = now
-        loadMoreResources(undefined, undefined, false)
-      }
-    }, { root: null, rootMargin: '200px', threshold: 0 })
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [autoLoadEnabled, displayedResources.length, isLoading, page, total])
-
-  const handleSortChange = (nextSort: 'latest' | 'downloads' | 'views') => {
-    if (sort === nextSort) return
-    setDisplayedResources([])
-    setTotal(0)
-    setPage(1)
-    lastPageRef.current = 0
-    loadedIdsRef.current.clear()
-    setHasMore(true)
-    setAutoLoadEnabled(false)
-    setIsLoading(false)
-    setSort(nextSort)
-    ;(async () => { await loadMoreResources(nextSort, 1, true) })()
+  // 3. Fetch initial resources (page=1, size=6, sort='latest')
+  const page = 1
+  const size = 6
+  const where = {
+    tags: { some: { tag: { slug: tagSlug } } }
   }
+
+  const [total, resourcesRaw] = await Promise.all([
+    prisma.resource.count({ where }),
+    prisma.resource.findMany({
+      where,
+      orderBy: { id: 'desc' }, // default 'latest'
+      take: size,
+      include: {
+        category: true,
+        subcategory: true,
+      }
+    })
+  ])
+
+  // Transform to client format
+  const initialResources = resourcesRaw.map((r: any) => ({
+    id: r.id,
+    title: r.title,
+    coverImage: r.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&h=600&fit=crop',
+    category: r.subcategory?.name || r.category?.name || '其他',
+    categorySlug: r.category?.slug || null,
+    subcategorySlug: r.subcategory?.slug || null
+  }))
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 pb-8">
-        {/* Hero section, no filter card below */}
-        <section className="mb-6">
-          <div className="relative w-full h-48 md:h-64 overflow-hidden card">
-            <Image
-              src={siteConfig?.heroImage || "/haike_hero.svg"}
-              alt="Tag Hero"
-              fill
-              sizes="(max-width: 768px) 100vw, 100vw"
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-black/35" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white">
-                <h1 className="text-2xl md:text-3xl font-bold mb-2">{tagName}</h1>
-                <p className="text-sm md:text-base opacity-90">共找到 {total || displayedResources.length} 个资源</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 标签页不需要排序卡片 */}
-
-        {/* Resources Grid */}
-        {displayedResources.length === 0 ? (
-          <div className="text-center mt-4 py-16">
-            <div className="text-muted-foreground mb-4">
-              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">暂无资源</h3>
-            <p className="text-muted-foreground">该标签下还没有资源，敬请期待。</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4">
-              {displayedResources.map((resource, index) => (
-                <ResourceCard key={resource.id} resource={resource} index={index} />
-              ))}
-            </div>
-            <div ref={sentinelRef} className="h-4" />
-            {isLoading && (
-              <div className="flex justify-center my-6">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+    <TagDetailClient
+      tagSlug={tagSlug}
+      initialTagName={tag.name}
+      initialResources={initialResources}
+      initialTotal={total}
+      initialSiteConfig={siteConfig}
+    />
   )
 }

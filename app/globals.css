@@ -152,16 +152,17 @@ body {
 }
 
 .card {
-  background: var(--card);
-  /* border: 1px solid var(--border); */
-  border-radius: 0.5rem;
-  /* padding: 1rem; */
-  box-shadow: none;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
 .card:hover {
-  background: var(--secondary);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform: translateY(-4px);
   border-color: var(--input);
 }
 

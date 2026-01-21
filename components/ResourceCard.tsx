@@ -19,47 +19,58 @@ interface ResourceCardProps {
 }
 
 export default function ResourceCard({ resource, index = 0 }: ResourceCardProps) {
+  const categoryHref = resource.categorySlug 
+    ? (resource.subcategorySlug 
+        ? `/category/${resource.categorySlug}/${resource.subcategorySlug}` 
+        : `/category/${resource.categorySlug}`)
+    : null
 
   return (
     <motion.div 
-      className="card cursor-pointer"
+      className="card group flex flex-col h-full bg-card"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
     >
-      {/* Split layout: image top, text bottom */}
-      <div className="flex flex-col h-48 md:h-56">
-        <Link href={`/resource/${resource.id}`} className="block relative h-2/3 overflow-hidden bg-white">
-          <Image
-            src={resource.coverImage}
-            alt={resource.title}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover"
-          />
-        </Link>
-        <div className="h-1/3 pl-3 pt-3 flex flex-col justify-start gap-1">
-          {resource.categorySlug ? (
-            <Link
-              href={resource.subcategorySlug ? `/category/${resource.categorySlug}/${resource.subcategorySlug}` : `/category/${resource.categorySlug}`}
-              className="flex items-center text-xs md:text-sm text-muted-foreground hover:text-violet-500"
-            >
-              <span className="inline-block w-1.5 h-1.5 rounded-full border border-red-500 mr-2"></span>
-              {resource.category}
-            </Link>
-          ) : (
-            <div className="flex items-center text-xs md:text-sm text-muted-foreground">
-              <span className="inline-block w-1.5 h-1.5 rounded-full border border-red-500 mr-2"></span>
-              {resource.category}
-            </div>
-          )}
-          <Link href={`/resource/${resource.id}`} className="text-foreground hover:text-primary">
-            <h2 className="text-sm md:text-base font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-colors" title={resource.title}>
-              {resource.title}
-            </h2>
-          </Link>
+      {/* Image Container */}
+      <Link href={`/resource/${resource.id}`} className="block relative w-full aspect-[16/10] overflow-hidden bg-muted">
+        <Image
+          src={resource.coverImage}
+          alt={resource.title}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        {/* Optional: Overlay on hover */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+      </Link>
+
+      {/* Content Container */}
+      <div className="flex flex-col p-4 gap-3 flex-grow">
+        {/* Category Badge */}
+        <div className="flex items-start">
+            {categoryHref ? (
+                <Link 
+                    href={categoryHref}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                >
+                    {resource.category}
+                </Link>
+            ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                    {resource.category}
+                </span>
+            )}
         </div>
+
+        {/* Title */}
+        <Link href={`/resource/${resource.id}`} className="block">
+          <h2 className="text-base font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors" title={resource.title}>
+            {resource.title}
+          </h2>
+        </Link>
+        
+        {/* Spacer to push content up if we had a footer, but for now just nice padding */}
       </div>
     </motion.div>
   )
