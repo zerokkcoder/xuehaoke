@@ -108,11 +108,12 @@ export default function VIPPage() {
                 key={plan.id}
                 className={`relative card p-8 transition-all duration-300 hover:shadow-lg ${
                   plan.isPopular ? 'border-purple-500 ring-1 ring-purple-300' : 'border-border'
-                } w-full sm:w-[360px]`}
+                } w-full sm:w-[360px] overflow-visible!`}
+                style={{ overflow: 'visible' }}
               >
                 {plan.isPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-linear-to-r from-purple-500 to-blue-500 text-white px-3 py-0.5 rounded-full text-xs font-medium">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <span className="bg-linear-to-r from-purple-500 to-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium shadow-sm whitespace-nowrap">
                       最受欢迎
                     </span>
                   </div>
