@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
 import pinyin from 'tiny-pinyin'
+import { invalidateResourceCache } from '@/lib/cache'
 
 function verifyAdmin(req: Request) {
   const cookieHeader = req.headers.get('cookie') || ''
@@ -53,6 +54,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       data.slug = finalSlug
     }
     const updated = await prisma.tag.update({ where: { id: idNum }, data })
+    await invalidateResourceCache()
     return NextResponse.json({ success: true, data: updated })
   } catch (err: any) {
     // 唯一约束冲突等

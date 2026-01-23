@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
+import { getCachedSiteSettings } from "@/lib/cache";
 import { headers } from "next/headers";
 
 export const dynamic = 'force-dynamic'
@@ -20,11 +21,10 @@ const geistMono = Geist_Mono({
 /** 生成站点全局默认元数据配置 */
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const rows: any[] = await prisma.$queryRawUnsafe('SELECT site_name, site_description, site_keywords FROM site_settings LIMIT 1')
-    const r = rows?.[0]
-    const title = (r?.site_name ? `${r.site_name} - 专业资源下载平台` : '学好课 - 专业资源下载平台')
-    const description = r?.site_description || "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。"
-    const keywords = r?.site_keywords || "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计"
+    const r = await getCachedSiteSettings()
+    const title = (r?.siteName ? `${r.siteName} - 专业资源下载平台` : '学好课 - 专业资源下载平台')
+    const description = r?.siteDescription || "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。"
+    const keywords = r?.siteKeywords || "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计"
     const hs = await headers()
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     // const host = hs.get('x-forwarded-host') || hs.get('host') || ''

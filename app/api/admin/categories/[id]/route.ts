@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import prisma from '@/lib/prisma'
+import { invalidateCategoriesCache } from '@/lib/cache'
 import pinyin from 'tiny-pinyin'
 
 function verifyAdmin(req: Request) {
@@ -52,6 +53,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (dup) return NextResponse.json({ success: false, message: 'Slug 已存在' }, { status: 400 })
     data.slug = finalSlug
     const updated = await prisma.category.update({ where: { id: idNum }, data })
+    await invalidateCategoriesCache()
     return NextResponse.json({ success: true, data: updated })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '更新失败' }, { status: 500 })
@@ -85,6 +87,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ success: false, message: '该分类下仍有子分类，禁止删除。请先删除子分类。' }, { status: 400 })
     }
     await prisma.category.delete({ where: { id: idNum } })
+    await invalidateCategoriesCache()
     return NextResponse.json({ success: true })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '删除失败' }, { status: 500 })

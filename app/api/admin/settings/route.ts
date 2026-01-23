@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
+import { invalidateSiteSettingsCache } from '@/lib/cache'
 
 function verifyAdmin(req: Request) {
   const cookieHeader = req.headers.get('cookie') || ''
@@ -112,6 +113,7 @@ export async function PUT(req: Request) {
         await prisma.$executeRawUnsafe(`INSERT INTO site_settings () VALUES ()`)
       }
     }
+    await invalidateSiteSettingsCache()
     // 统一返回最新数据
     const latestRows: any[] = await prisma.$queryRawUnsafe('SELECT * FROM site_settings LIMIT 1')
     const latest = latestRows?.[0] || null

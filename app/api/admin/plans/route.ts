@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
+import { invalidatePlansCache } from '@/lib/cache'
 
 function verifyAdmin(req: Request) {
   const cookieHeader = req.headers.get('cookie') || ''
@@ -49,5 +50,6 @@ export async function POST(req: Request) {
   const dup = await prisma.membershipPlan.findUnique({ where: { name } })
   if (dup) return NextResponse.json({ success: false, message: '计划名称已存在' }, { status: 400 })
   const created = await prisma.membershipPlan.create({ data: { name, price, durationDays, dailyDownloads, isPopular, features } })
+  await invalidatePlansCache()
   return NextResponse.json({ success: true, data: created })
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import prisma from '@/lib/prisma'
+import { invalidateCategoriesCache } from '@/lib/cache'
 import pinyin from 'tiny-pinyin'
 
 // 使用 Prisma 管理分类
@@ -57,6 +58,7 @@ export async function POST(req: Request) {
     const dup = dupRows?.[0] || null
     if (dup) return NextResponse.json({ success: false, message: 'Slug 已存在' }, { status: 400 })
     const created = await prisma.category.create({ data: { name: String(name).trim(), slug: finalSlug, sort: sortNum } })
+    await invalidateCategoriesCache()
     return NextResponse.json({ success: true, data: created })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '创建失败' }, { status: 500 })

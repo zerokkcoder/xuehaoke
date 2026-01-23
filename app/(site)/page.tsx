@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import HomeClient from './HomeClient'
+import { getCachedSiteSettings, getCachedHomepageResources } from '@/lib/cache'
 
 /**
  * 页面重新验证时间 (ISR): 1小时
@@ -24,14 +25,15 @@ export default async function Home({
   // 1. 获取站点配置
   let siteConfig = null
   try {
-    siteConfig = await prisma.siteSetting.findFirst({
-      select: {
-        heroImage: true,
-        siteSlogan: true,
-        siteSubtitle: true,
-        siteName: true
+    const s = await getCachedSiteSettings()
+    if (s) {
+      siteConfig = {
+        heroImage: s.heroImage || null,
+        siteSlogan: s.siteSlogan || null,
+        siteSubtitle: s.siteSubtitle || null,
+        siteName: s.siteName || null
       }
-    })
+    }
   } catch (e) {
     console.error('Failed to fetch site settings:', e)
   }
@@ -39,34 +41,49 @@ export default async function Home({
   // 2. 获取初始资源列表
   const page = 1
   const size = 6
-  const where: any = {}
   
-  if (q) {
-    where.OR = [
-      { title: { contains: q } },
-      { content: { contains: q } }
-    ]
+  let total = 0
+  let resourcesRaw: any[] = []
+
+  if (!q && sort === 'latest') {
+    try {
+      const cached = await getCachedHomepageResources()
+      total = cached.total
+      resourcesRaw = cached.resources
+    } catch {}
+  } else {
+    const where: any = {}
+    if (q) {
+      where.OR = [
+        { title: { contains: q } },
+        { content: { contains: q } }
+      ]
+    }
+
+    let orderBy: any = { id: 'desc' }
+    if (sort === 'downloads') {
+      orderBy = { downloadCount: 'desc' }
+    } else if (sort === 'views') {
+      orderBy = { viewCount: 'desc' }
+    }
+
+    const [t, r] = await Promise.all([
+      prisma.resource.count({ where }),
+      prisma.resource.findMany({
+        where,
+        orderBy,
+        take: size,
+        include: {
+          category: true,
+          subcategory: true,
+        }
+      })
+    ])
+    total = t
+    resourcesRaw = r
   }
 
-  let orderBy: any = { id: 'desc' }
-  if (sort === 'downloads') {
-    orderBy = { downloadCount: 'desc' }
-  } else if (sort === 'views') {
-    orderBy = { viewCount: 'desc' }
-  }
-
-  const [total, resourcesRaw] = await Promise.all([
-    prisma.resource.count({ where }),
-    prisma.resource.findMany({
-      where,
-      orderBy,
-      take: size,
-      include: {
-        category: true,
-        subcategory: true,
-      }
-    })
-  ])
+  // 转换为客户端组件需要的格式
 
   // 转换为客户端组件需要的格式
   const initialResources = resourcesRaw.map((r) => ({

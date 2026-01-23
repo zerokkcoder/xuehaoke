@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { headers } from 'next/headers'
 import ResourceDetailClient from './ResourceDetailClient'
+import { getCachedLatestResources, getCachedHotTags } from '@/lib/cache'
 
 export const revalidate = 3600 // ISR cache for 1 hour
 
@@ -48,7 +49,7 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
   if (!resourceRaw) return notFound()
 
   // 2. Fetch related data (parallel)
-  const [prev, next, hotTagsRaw, latestRaw, randomRaw] = await Promise.all([
+  const [prev, next, tags, latestRaw, randomRaw] = await Promise.all([
     prisma.resource.findFirst({
       where: { id: { lt: idNum } },
       orderBy: { id: 'desc' },
@@ -59,25 +60,14 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
       orderBy: { id: 'asc' },
       select: { id: true, title: true }
     }),
-    prisma.resourceTag.groupBy({
-      by: ['tagId'],
-      _count: { tagId: true },
-      orderBy: { _count: { tagId: 'desc' } },
-    }),
-    prisma.resource.findMany({
-      orderBy: { id: 'desc' },
-      take: 10,
-      select: { id: true, title: true }
-    }),
+    getCachedHotTags(),
+    getCachedLatestResources(),
     prisma.$queryRawUnsafe<any[]>('SELECT id, title, cover FROM resources ORDER BY RAND() LIMIT 6')
   ])
 
-  // 3. Process tags
-  const tagIds = hotTagsRaw.map(t => t.tagId)
-  const tags = await prisma.tag.findMany({
-    where: { id: { in: tagIds } },
-    select: { id: true, name: true, slug: true }
-  })
+  // 3. Process tags (handled by cache)
+  // const tagIds = hotTagsRaw.map(t => t.tagId)
+  // const tags = ...
 
   // 4. Process random/guess list
   const guessList = randomRaw.map((r: any) => ({

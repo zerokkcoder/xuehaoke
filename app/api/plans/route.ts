@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { getCachedPlans } from '@/lib/cache'
 
 export async function GET() {
-  const rows = await prisma.membershipPlan.findMany({ orderBy: [{ isPopular: 'desc' }, { price: 'asc' }, { id: 'asc' }] })
+  const rows = await getCachedPlans()
   // Normalize features to array of strings
   const data = rows.map((p: any) => ({
     id: p.id,

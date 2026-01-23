@@ -70,22 +70,18 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+import { getCachedCategories, getCachedSiteSettings } from '@/lib/cache'
+
 export default async function SiteLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   let initialCategories: { id: number; name: string; slug?: string | null; subcategories: { id: number; name: string; slug?: string | null }[] }[] = []
   try {
-    const cats = await prisma.category.findMany({
-      orderBy: [{ sort: 'asc' }, { id: 'desc' }],
-      include: {
-        subcategories: { orderBy: [{ sort: 'asc' }, { id: 'asc' }] },
-      },
-    })
+    const cats = await getCachedCategories()
     initialCategories = cats.map((c: any) => ({ id: c.id, name: c.name, slug: (c as any).slug || null, subcategories: (c.subcategories || []).map((s: any) => ({ id: s.id, name: s.name, slug: (s as any).slug || null })) }))
   } catch {}
   let initialSiteConfig: { siteName?: string | null; siteLogo?: string | null } | null = null
   try {
-    const sRows: { site_name: string | null; site_logo: string | null }[] = await prisma.$queryRawUnsafe('SELECT site_name, site_logo FROM site_settings LIMIT 1')
-    const sr = sRows?.[0]
-    initialSiteConfig = sr ? { siteName: sr.site_name || null, siteLogo: sr.site_logo || null } : null
+    const sr = await getCachedSiteSettings()
+    initialSiteConfig = sr ? { siteName: sr.siteName || null, siteLogo: sr.siteLogo || null } : null
   } catch {}
 
   return (

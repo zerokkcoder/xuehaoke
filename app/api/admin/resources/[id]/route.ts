@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import pinyin from 'tiny-pinyin'
 import jwt from 'jsonwebtoken'
+import { invalidateResourceCache } from '@/lib/cache'
 
 function verifyAdmin(req: Request) {
   const cookieHeader = req.headers.get('cookie') || ''
@@ -121,6 +122,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const final = await prisma.resource.findUnique({ where: { id: idNum }, include: { category: true, subcategory: true, tags: { include: { tag: true } }, downloads: true } })
+    await invalidateResourceCache()
     return NextResponse.json({ success: true, data: final })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '更新失败' }, { status: 500 })
@@ -139,6 +141,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     await prisma.resourceTag.deleteMany({ where: { resourceId: idNum } })
     await prisma.resourceDownload.deleteMany({ where: { resourceId: idNum } })
     await prisma.resource.delete({ where: { id: idNum } })
+    await invalidateResourceCache()
     return NextResponse.json({ success: true })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '删除失败' }, { status: 500 })

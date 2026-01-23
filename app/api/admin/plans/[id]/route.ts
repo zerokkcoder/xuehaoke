@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
+import { invalidatePlansCache } from '@/lib/cache'
 
 function verifyAdmin(req: Request) {
   const cookieHeader = req.headers.get('cookie') || ''
@@ -31,6 +32,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (Array.isArray(body.features)) data.features = body.features
   try {
     const updated = await prisma.membershipPlan.update({ where: { id: idNum }, data })
+    await invalidatePlansCache()
     return NextResponse.json({ success: true, data: updated })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '更新失败' }, { status: 500 })
@@ -45,6 +47,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   if (!Number.isFinite(idNum) || idNum <= 0) return NextResponse.json({ success: false, message: '无效计划ID' }, { status: 400 })
   try {
     await prisma.membershipPlan.delete({ where: { id: idNum } })
+    await invalidatePlansCache()
     return NextResponse.json({ success: true })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '删除失败' }, { status: 500 })

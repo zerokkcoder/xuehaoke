@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import pinyin from 'tiny-pinyin'
 import jwt from 'jsonwebtoken'
+import { invalidateResourceCache } from '@/lib/cache'
 
 function verifyAdmin(req: Request) {
   const cookieHeader = req.headers.get('cookie') || ''
@@ -133,6 +134,7 @@ export async function POST(req: Request) {
       },
       include: { category: true, subcategory: true, tags: { include: { tag: true } }, downloads: true },
     })
+    await invalidateResourceCache()
     return NextResponse.json({ success: true, data: created })
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || '创建失败' }, { status: 500 })
