@@ -63,11 +63,10 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
       by: ['tagId'],
       _count: { tagId: true },
       orderBy: { _count: { tagId: 'desc' } },
-      take: 10
     }),
     prisma.resource.findMany({
       orderBy: { id: 'desc' },
-      take: 5,
+      take: 10,
       select: { id: true, title: true }
     }),
     prisma.$queryRawUnsafe<any[]>('SELECT id, title, cover FROM resources ORDER BY RAND() LIMIT 6')
