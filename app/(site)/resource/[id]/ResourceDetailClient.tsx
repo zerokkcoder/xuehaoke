@@ -38,10 +38,18 @@ export default function ResourceDetailClient({
   const [guessList, setGuessList] = useState(initialGuessList)
   const [hasAccess, setHasAccess] = useState(false)
   const [accessChecked, setAccessChecked] = useState(false)
-  const [serverAuthorized, setServerAuthorized] = useState(false)
+  const [serverAuthorized, setServerAuthorized] = useState(initialResource.authorized || false)
 
   // On mount, perform access checks that require client context (localStorage, cookies)
   useEffect(() => {
+    // If server already authorized and provided downloadUrl, we might skip redundant check
+    // But keeping it is fine for double verification or refreshing status
+    if (initialResource.authorized && initialResource.downloadUrl) {
+       setHasAccess(true)
+       setAccessChecked(true)
+       return 
+    }
+
     const checkAccess = async () => {
       try {
         if (!resource) return
@@ -60,6 +68,14 @@ export default function ResourceDetailClient({
         const json = await res.json().catch(() => null)
         if (res.ok && json?.success) {
           setHasAccess(!!json.data?.hasAccess)
+          // Update resource with download info if available
+          if (json.data?.downloadUrl) {
+            setResource((prev: any) => ({
+              ...prev,
+              downloadUrl: json.data.downloadUrl,
+              downloadCode: json.data.downloadCode
+            }))
+          }
         }
       } catch {}
       finally { setAccessChecked(true) }
@@ -383,6 +399,17 @@ export default function ResourceDetailClient({
               >
                 点击下载
               </a>
+              {extractionCode && (
+                <div className="mt-3 flex items-center justify-between bg-muted rounded px-3 py-2 text-sm">
+                  <span className="text-muted-foreground">提取码：<span className="text-foreground font-mono">{extractionCode}</span></span>
+                  <button
+                    onClick={copyExtractionCode}
+                    className="text-primary hover:underline text-xs"
+                  >
+                    复制
+                  </button>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground mt-3">
                 支付后点击下载按钮即可查看网盘链接，如果链接失效，可联系本站客服。
               </p>

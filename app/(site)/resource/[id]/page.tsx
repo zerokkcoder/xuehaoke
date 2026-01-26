@@ -1,10 +1,21 @@
 import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import ResourceDetailClient from './ResourceDetailClient'
 import { getCachedLatestResources, getCachedHotTags } from '@/lib/cache'
+import jwt from 'jsonwebtoken'
 
-export const revalidate = 3600 // ISR cache for 1 hour
+export const revalidate = 0 // Disable cache for dynamic auth check or use logic below
+// Note: If we use cookies, we opt out of full static generation for this route segment, 
+// but since it's a dynamic [id] route, it's usually dynamic anyway. 
+// However, 'revalidate' export forces ISR. 
+// We should probably keep ISR for the public content but check auth dynamically.
+// Actually, for authenticated content in ISR pages, we usually rely on client-side fetching.
+// But since the user wants it to work "on click" without waiting, and SSR is better.
+// Let's remove revalidate to make it dynamic, OR keep it and accept we need to access DB.
+// Given the requirement, I'll switch to dynamic rendering to support immediate download link availability.
+// Or better: keep ISR but add a "dynamic" hole? Next.js doesn't support that easily in App Router without "use client".
+// So I will remove `export const revalidate = 3600` and let it be dynamic by default due to cookies usage.
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -77,6 +88,45 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
     category: '推荐资源', // Simplified
   }))
 
+  // 4.5 Check authorization
+  let downloadUrl = ''
+  let downloadCode = ''
+  let authorized = false
+
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('site_token')?.value
+    if (token) {
+      const secret = process.env.SITE_JWT_SECRET || 'site_dev_secret_change_me'
+      const payload = jwt.verify(token, secret) as any
+      const userId = Number(payload?.uid)
+      if (userId) {
+        const [access, user] = await Promise.all([
+          prisma.userResourceAccess.findUnique({ where: { userId_resourceId: { userId, resourceId: idNum } } }),
+          prisma.user.findUnique({ where: { id: userId }, select: { isVip: true, vipExpireAt: true } })
+        ])
+        const now = new Date()
+        const isVip = !!user?.isVip && (!!user?.vipExpireAt ? (new Date(user.vipExpireAt) > now) : true)
+        
+        if (isVip || access) {
+          authorized = true
+          // Fetch download link
+          const resourceWithDownload = await prisma.resource.findUnique({
+            where: { id: idNum },
+            include: { downloads: true }
+          })
+          const download = resourceWithDownload?.downloads?.[0]
+          if (download) {
+            downloadUrl = download.url
+            downloadCode = download.code || ''
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore auth errors, treat as unauthorized
+  }
+
   // 5. Transform resource data for client
   const resource = {
     id: String(resourceRaw.id),
@@ -96,8 +146,9 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
     isVipOnly: false, // Simplified
     isNew: (Date.now() - resourceRaw.createdAt.getTime()) < 7 * 24 * 3600 * 1000,
     isPopular: resourceRaw.downloadCount > 100 || resourceRaw.viewCount > 500,
-    downloadUrl: '', // Secure info not passed to client by default unless authorized check passed later
-    downloadCode: '',
+    downloadUrl, 
+    downloadCode,
+    authorized,
   }
 
   // 6. Log view count (server side effect)

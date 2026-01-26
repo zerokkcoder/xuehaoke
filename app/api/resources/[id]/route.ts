@@ -46,6 +46,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     }
     // 授权：已购买或 VIP 用户均可下载
     const authorized = !!userId && (hasAccess || isVip)
+    const download = r.downloads[0] // Assuming single download link for now
     const data = {
       id: r.id,
       title: r.title,
@@ -55,7 +56,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       category: r.category ? { id: r.category.id, name: r.category.name, slug: (r.category as any).slug || null } : null,
       subcategory: r.subcategory ? { id: r.subcategory.id, name: r.subcategory.name, slug: (r.subcategory as any).slug || null } : null,
       tags: r.tags.map((t: any) => ({ id: t.tagId, name: t.tag.name, slug: (t.tag as any).slug || null })),
-      downloads: authorized ? r.downloads.map((d: any) => ({ id: d.id, url: d.url, code: d.code })) : [],
+      // Return downloadUrl if authorized
+      downloadUrl: authorized && download ? download.url : null,
+      downloadCode: authorized && download ? download.code : null,
       authorized,
     }
     return NextResponse.json({ success: true, data })
