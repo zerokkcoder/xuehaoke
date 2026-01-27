@@ -43,6 +43,11 @@ export async function GET(req: Request) {
     base = `${proto}://${host}`
   }
 
+  // 最终兜底：生产环境且非本地调试时，强制 HTTPS
+  if (process.env.NODE_ENV === 'production' && !isLocalHost(base.split('://')[1] || '') && base.startsWith('http://')) {
+    base = base.replace('http://', 'https://')
+  }
+
   const [cats, tags] = await Promise.all([
     prisma.category.findMany({ select: { slug: true, createdAt: true } }),
     prisma.tag.findMany({ select: { slug: true, createdAt: true } }),

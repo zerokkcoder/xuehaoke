@@ -29,13 +29,19 @@ export async function generateMetadata(): Promise<Metadata> {
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     // const host = hs.get('x-forwarded-host') || hs.get('host') || ''
     // 强制使用生产环境域名作为 metadataBase，解决 canonical 和索引问题
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
+      siteUrl = siteUrl.replace('http://', 'https://')
+    }
     return { title, description, keywords, metadataBase: new URL(siteUrl) }
   } catch {
     const hs = await headers()
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     // const host = hs.get('x-forwarded-host') || hs.get('host') || ''
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
+      siteUrl = siteUrl.replace('http://', 'https://')
+    }
     return {
       title: "学好课 - 专业资源下载平台",
       description: "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。",
@@ -60,7 +66,10 @@ export default async function RootLayout({
 }>) {
   const hs = await headers()
   const nonce = hs.get('x-nonce') || undefined
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+  let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+  if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
+    siteUrl = siteUrl.replace('http://', 'https://')
+  }
   const organizationLogo = `${siteUrl}/logo.png`
   return (
     <html lang="zh">

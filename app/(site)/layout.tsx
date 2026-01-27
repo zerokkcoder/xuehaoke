@@ -33,7 +33,10 @@ export async function generateMetadata(): Promise<Metadata> {
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     // const host = hs.get('x-forwarded-host') || hs.get('host') || ''
     // 强制使用生产环境域名作为 Canonical URL，避免 HTTP/HTTPS 重复收录
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
+      siteUrl = siteUrl.replace('http://', 'https://')
+    }
     return {
       title,
       description,
@@ -59,7 +62,10 @@ export async function generateMetadata(): Promise<Metadata> {
     const hs = await headers()
     const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
     // const host = hs.get('x-forwarded-host') || hs.get('host') || ''
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
+      siteUrl = siteUrl.replace('http://', 'https://')
+    }
     return {
       title: "学好课 - 专业资源下载平台",
       description: "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。",

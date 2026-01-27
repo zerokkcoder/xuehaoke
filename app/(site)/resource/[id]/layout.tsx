@@ -13,7 +13,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const r = await prisma.resource.findUnique({ where: { id: idNum }, select: { title: true, content: true, cover: true, category: { select: { name: true } }, subcategory: { select: { name: true } } } })
     
     // 强制使用生产环境域名
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
+      siteUrl = siteUrl.replace('http://', 'https://')
+    }
 
     if (!r) {
       return { title: '资源未找到', alternates: { canonical: `${siteUrl}/resource/${id}` }, robots: { index: false, follow: true } }
@@ -46,7 +49,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       },
     }
   } catch {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+    if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
+      siteUrl = siteUrl.replace('http://', 'https://')
+    }
     return { title: '资源详情', alternates: { canonical: `${siteUrl}/resource/${id}` }, robots: { index: false, follow: true } }
   }
 }
@@ -82,7 +88,10 @@ export default async function ResourceLayout(props: any) {
 
   const hs = await headers()
   const nonce = hs.get('x-nonce') || undefined
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+  let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
+  if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
+    siteUrl = siteUrl.replace('http://', 'https://')
+  }
   const name = r?.title || '资源详情'
   const description = (r?.content || '').replace(/\s+/g, ' ').slice(0, 160)
   const imageRaw = r?.cover || site?.siteLogo || '/logo.png'
