@@ -138,6 +138,7 @@ export default function CategoryDetailClient({
               sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover"
               priority
+              unoptimized
             />
             <div className="absolute inset-0 bg-black/35" />
             <div className="absolute inset-0 flex items-center justify-center">

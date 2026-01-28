@@ -173,6 +173,7 @@ export default function ProfilePage() {
               fill
               className="object-cover"
               priority
+              unoptimized
             />
             <div className="absolute inset-0 bg-black/30" />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -271,7 +272,7 @@ export default function ProfilePage() {
                       {recentDownloads.slice(0, 4).map((d) => (
                         <div key={`${d.resourceId}-${d.accessedAt}`} className="flex items-center gap-3">
                           <div className="relative w-16 h-12 overflow-hidden rounded bg-white">
-                            <Image src={d.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=320&h=240&fit=crop'} alt={d.title} fill className="object-cover" />
+                            <Image src={d.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=320&h=240&fit=crop'} alt={d.title} fill className="object-cover" unoptimized suppressHydrationWarning />
                           </div>
                           <div className="flex-1 min-w-0">
                             <Link href={`/resource/${d.resourceId}`} className="block text-sm font-medium text-foreground hover:underline truncate">{d.title}</Link>
@@ -358,7 +359,7 @@ export default function ProfilePage() {
                       {recentDownloads.map((d, idx) => (
                         <div key={`${d.resourceId}-${d.accessedAt}`} className="flex items-center gap-3 p-2 border border-border rounded-md">
                           <div className="relative w-16 h-12 overflow-hidden rounded bg-white">
-                            <Image src={d.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=320&h=240&fit=crop'} alt={d.title} fill className="object-cover" />
+                            <Image src={d.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=320&h=240&fit=crop'} alt={d.title} fill className="object-cover" unoptimized suppressHydrationWarning />
                           </div>
                           <div className="flex-1 min-w-0">
                             <Link href={`/resource/${d.resourceId}`} className="block text-sm font-medium text-foreground hover:underline truncate">{d.title}</Link>

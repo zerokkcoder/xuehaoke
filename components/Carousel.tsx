@@ -59,6 +59,8 @@ export default function Carousel({ slides, autoPlay = true, interval = 5000 }: C
               fill
               className="object-cover"
               priority={index === 0}
+              unoptimized
+              suppressHydrationWarning
             />
             <div className="absolute inset-0 bg-black/30" />
             <div className="absolute inset-0 flex items-center">

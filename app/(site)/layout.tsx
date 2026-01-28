@@ -42,6 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       keywords,
       metadataBase: new URL(siteUrl),
+      alternates: { canonical: './' },
       robots: { index: true, follow: true },
       openGraph: {
         title,
@@ -71,6 +72,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。",
       keywords: "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计",
       metadataBase: new URL(siteUrl),
+      alternates: { canonical: './' },
       robots: { index: true, follow: true },
     }
   }

@@ -133,6 +133,7 @@ export default function SubcategoryDetailClient({
               fill
               className="object-cover"
               priority
+              unoptimized
             />
             <div className="absolute inset-0 bg-black/35" />
             <div className="absolute inset-0 flex items-center justify-center">

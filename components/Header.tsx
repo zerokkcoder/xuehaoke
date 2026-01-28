@@ -109,7 +109,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 link">
-            <Image src={siteConfig?.siteLogo || '/logo.png'} alt="logo" width={28} height={28} className="object-contain" priority />
+            <Image src={siteConfig?.siteLogo || '/logo.png'} alt="logo" width={28} height={28} className="object-contain" priority unoptimized />
             <span className="text-lg font-semibold">{siteConfig?.siteName || '学好课'}</span>
           </Link>
 
@@ -196,7 +196,15 @@ export default function Header({ currentUser, initialCategories = [], initialSit
                   className="flex items-center gap-2 text-foreground hover:text-primary"
                 >
                   {(mounted ? siteUser : currentUser)?.avatarUrl ? (
-                    <Image src={(mounted ? siteUser : currentUser)!.avatarUrl as string} alt="avatar" width={24} height={24} className="rounded-full object-cover" />
+                    <Image 
+                    src={(mounted ? siteUser : currentUser)!.avatarUrl as string} 
+                    alt="avatar" 
+                    width={24} 
+                    height={24} 
+                    className="rounded-full object-cover" 
+                    unoptimized 
+                    suppressHydrationWarning
+                  />
                   ) : (
                     <UserCircleIcon className="w-6 h-6" />
                   )}

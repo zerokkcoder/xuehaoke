@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
       {
         pathname: '/logo.png',
       },
+      {
+        pathname: '/xianyu.png',
+      },
     ],
     remotePatterns: [
       {

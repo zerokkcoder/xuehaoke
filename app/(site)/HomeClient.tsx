@@ -190,6 +190,7 @@ export default function HomeClient({
               sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover"
               priority
+              unoptimized
             />
             <div className="absolute inset-0 bg-black/35" />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -229,6 +230,7 @@ export default function HomeClient({
               sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover"
               priority
+              unoptimized
             />
             <div className="absolute inset-0 bg-black/25" />
             <div className="absolute inset-0 flex items-center justify-center">

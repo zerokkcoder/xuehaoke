@@ -259,6 +259,7 @@ export default function PaymentModal({ isOpen, onClose, amount, description, onP
                       width={192}
                       height={192}
                       className="w-48 h-48 mx-auto mb-4 rounded border border-border bg-white"
+                      unoptimized
                     />
                     <p className="text-sm text-muted-foreground">请使用支付宝扫描二维码完成支付</p>
                   </div>
