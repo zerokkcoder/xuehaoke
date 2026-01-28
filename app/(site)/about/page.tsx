@@ -10,7 +10,7 @@ export default function AboutPage() {
     <div className="relative min-h-screen w-full bg-background selection:bg-primary selection:text-primary-foreground">
       {/* Dynamic Background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
         <div className="absolute left-0 top-0 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-[120px]" />
         <div className="absolute right-0 bottom-0 h-[600px] w-[600px] translate-x-1/3 translate-y-1/3 rounded-full bg-blue-500/5 blur-[100px]" />
       </div>
@@ -25,7 +25,7 @@ export default function AboutPage() {
             </div>
             <h1 className="text-6xl font-black tracking-tighter sm:text-8xl md:text-9xl">
               <span className="block text-foreground">构建</span>
-              <span className="block bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">知识体系。</span>
+              <span className="block bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent">知识体系。</span>
             </h1>
           </div>
           <p className="max-w-md text-lg text-muted-foreground md:text-xl md:leading-relaxed text-right">
@@ -54,14 +54,14 @@ export default function AboutPage() {
 
           {/* Stat Card 1 */}
           <div className="group relative col-span-6 flex flex-col justify-center overflow-hidden rounded-[2.5rem] border border-border/50 bg-card/30 p-10 backdrop-blur-xl transition-all duration-500 hover:border-primary/20 md:col-span-4">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             <span className="text-5xl font-black tracking-tighter text-foreground md:text-7xl">10K+</span>
             <span className="mt-2 text-sm font-bold uppercase tracking-widest text-muted-foreground">优质资源</span>
           </div>
 
           {/* Stat Card 2 */}
           <div className="group relative col-span-6 flex flex-col justify-center overflow-hidden rounded-[2.5rem] border border-border/50 bg-card/30 p-10 backdrop-blur-xl transition-all duration-500 hover:border-primary/20 md:col-span-4">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="absolute inset-0 bg-linear-to-br from-blue-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             <span className="text-5xl font-black tracking-tighter text-foreground md:text-7xl">99%</span>
             <span className="mt-2 text-sm font-bold uppercase tracking-widest text-muted-foreground">用户满意度</span>
           </div>

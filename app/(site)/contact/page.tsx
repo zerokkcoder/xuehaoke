@@ -16,18 +16,18 @@ export default function ContactPage() {
     <div className="relative min-h-screen w-full bg-background selection:bg-yellow-400 selection:text-yellow-950">
       {/* Background */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
         <div className="absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400/5 blur-[120px]" />
       </div>
 
-      <main className="flex min-h-screen flex-col items-center justify-center px-6 py-24">
+      <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
         <div className="mb-12 text-center">
           <div className="mb-4 inline-flex items-center rounded-full border border-yellow-400/20 bg-yellow-400/5 px-4 py-1.5 text-sm font-bold text-yellow-600 backdrop-blur-sm">
             <span className="mr-2 h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
             在线支持
           </div>
           <h1 className="text-5xl font-black tracking-tighter sm:text-7xl md:text-8xl">
-            联系 <span className="bg-gradient-to-br from-yellow-400 to-orange-500 bg-clip-text text-transparent">我们.</span>
+            联系 <span className="bg-linear-to-br from-yellow-400 to-orange-500 bg-clip-text text-transparent">我们.</span>
           </h1>
         </div>
 
@@ -35,7 +35,7 @@ export default function ContactPage() {
         <div className="group relative w-full max-w-md perspective-1000">
           <div className="relative overflow-hidden rounded-[2.5rem] border border-border/50 bg-card/40 p-8 shadow-2xl backdrop-blur-2xl transition-all duration-500 hover:scale-[1.02] hover:shadow-yellow-400/20">
             {/* Glossy Overlay */}
-            <div className="absolute inset-0 z-0 bg-gradient-to-br from-white/10 to-transparent opacity-50 pointer-events-none" />
+            <div className="absolute inset-0 z-0 bg-linear-to-br from-white/10 to-transparent opacity-50 pointer-events-none" />
             
             {/* Card Header */}
             <div className="relative z-10 mb-8 flex items-center justify-between">

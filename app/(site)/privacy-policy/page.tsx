@@ -17,7 +17,7 @@ export default function PrivacyPage() {
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-blue-500/5 blur-[120px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-24 md:py-32">
+      <div className="relative z-10 mx-auto max-w-4xl px-6 py-12 md:py-16">
         {/* Header */}
         <div className="mb-20 border-b border-border/40 pb-12">
           <div className="mb-6 flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
