@@ -73,6 +73,9 @@ export default async function RootLayout({
   const organizationLogo = `${siteUrl}/logo.png`
   return (
     <html lang="zh">
+      <head>
+        <link rel="alternate" type="text/markdown" href="/llms.txt" title="LLMs.txt" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
         <script
           type="application/ld+json"
