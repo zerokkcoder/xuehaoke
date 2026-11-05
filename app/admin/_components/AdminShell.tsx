@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import HeaderStatus from "./HeaderStatus";
-import { HomeIcon, Squares2X2Icon, DocumentIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, TagIcon, UserIcon, StarIcon, CreditCardIcon, Cog6ToothIcon, BookmarkIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, Squares2X2Icon, DocumentIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, TagIcon, UserIcon, StarIcon, CreditCardIcon, Cog6ToothIcon, BookmarkIcon, PuzzlePieceIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
@@ -98,6 +98,7 @@ function AsideMenu({ collapsed }: { collapsed: boolean }) {
     { href: "/admin/categories", label: "分类管理", Icon: DocumentIcon },
     { href: "/admin/tags", label: "标签管理", Icon: TagIcon },
     { href: "/admin/resources", label: "资源管理", Icon: Squares2X2Icon },
+    { href: "/admin/extension", label: "闲鱼扩展", Icon: PuzzlePieceIcon },
     { href: "/admin/favorites", label: "收藏管理", Icon: BookmarkIcon },
     { href: "/admin/users", label: "用户管理", Icon: UserIcon },
     { href: "/admin/plans", label: "会员计划", Icon: StarIcon },
