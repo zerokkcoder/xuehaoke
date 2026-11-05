@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient()
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL as string)
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   // 预置管理员账号（admin / 123456）
