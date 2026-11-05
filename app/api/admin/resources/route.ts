@@ -61,6 +61,10 @@ export async function GET(req: Request) {
     subcategory: r.subcategory,
     tags: r.tags.map((t: any) => ({ id: t.tagId, name: t.tag.name })),
     downloads: r.downloads.map((d: any) => ({ id: d.id, url: d.url, code: d.code })),
+    xianyuStatus: r.xianyuStatus,
+    xianyuItemId: r.xianyuItemId,
+    xianyuUrl: r.xianyuUrl,
+    xianyuListedAt: r.xianyuListedAt,
   }))
   return NextResponse.json({ success: true, data, pagination: { page, size, total } })
 }

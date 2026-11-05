@@ -56,6 +56,11 @@ model Resource {
   hotScore       Int            @default(0)
   categoryId     Int
   subcategoryId  Int?
+  // 闲鱼上架关联
+  xianyuStatus   String    @default("none") @map("xianyu_status") // none | listed
+  xianyuItemId   String?   @map("xianyu_item_id")
+  xianyuUrl      String?   @map("xianyu_url")
+  xianyuListedAt DateTime? @map("xianyu_listed_at")
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   category       Category       @relation(fields: [categoryId], references: [id])

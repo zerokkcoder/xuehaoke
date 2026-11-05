@@ -6,6 +6,7 @@ import MarkdownIt from 'markdown-it'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/utils'
 import ConfirmDialog from '@/app/admin/_components/ConfirmDialog'
+import { buildXianyuMaterial, type XianyuKeywordHit } from '@/lib/xianyu'
 
 type ResItem = {
   id: number
@@ -20,6 +21,10 @@ type ResItem = {
   subcategory?: { id: number; name: string } | null
   tags: { id: number; name: string }[]
   downloads: { id: number; url: string; code?: string | null }[]
+  xianyuStatus?: string | null
+  xianyuItemId?: string | null
+  xianyuUrl?: string | null
+  xianyuListedAt?: string | null
 }
 
 type CatItem = { id: number; name: string; sort?: number }
@@ -99,6 +104,24 @@ export default function AdminResourcesPage() {
   const [delId, setDelId] = useState<number | null>(null)
   const [delStep, setDelStep] = useState<0 | 1 | 2>(0)
 
+  // 一键上架闲鱼
+  const [xyOpen, setXyOpen] = useState(false)
+  const [xyRes, setXyRes] = useState<ResItem | null>(null)
+  const [xyTitle, setXyTitle] = useState('')
+  const [xyDesc, setXyDesc] = useState('')
+  const [xyPrice, setXyPrice] = useState<number | ''>('')
+  const [xyHits, setXyHits] = useState<XianyuKeywordHit[]>([])
+  const [xyAutoSubmit, setXyAutoSubmit] = useState(true)
+  const [xyExtReady, setXyExtReady] = useState(false)
+  const [xySending, setXySending] = useState(false)
+  const [xyStatus, setXyStatus] = useState<'none' | 'listed'>('none')
+  const [xyItemId, setXyItemId] = useState('')
+  const [xyUrl, setXyUrl] = useState('')
+  const [xySavingLink, setXySavingLink] = useState(false)
+  const publishResultRef = useRef<(r: any) => void>(() => {})
+  const toastRef = useRef(toast)
+  useEffect(() => { toastRef.current = toast }, [toast])
+
   const previewHtml = useMemo(() => ({ __html: renderMd(content) }), [content])
 
   const fetchList = async (p = page, s = size, query = q) => {
@@ -136,6 +159,31 @@ export default function AdminResourcesPage() {
   useEffect(() => {
     if (!subs.length) setSubcategoryId('')
   }, [subs])
+
+  // 与「闲鱼一键上架」浏览器扩展握手，并接收发布结果
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      const d: any = e?.data
+      if (!d || typeof d !== 'object' || d.source !== 'xuehaoke-xianyu-ext') return
+      if (d.type === 'READY' || d.type === 'PONG') { setXyExtReady(true); return }
+      if (d.type === 'PUBLISH_SENT') {
+        setXySending(false)
+        if (d.result?.ok) toastRef.current(`已发送到闲鱼发布页（图片 ${d.result.images ?? 0} 张）`, 'success')
+        else toastRef.current(d.result?.message || '扩展处理失败', 'error')
+        return
+      }
+      if (d.type === 'PUBLISH_RESULT') {
+        if (d.result?.ok) toastRef.current(d.result.message || '闲鱼已处理，请在闲鱼页面确认', 'success')
+        else toastRef.current(d.result?.message || '自动发布失败，请在闲鱼页面手动完成', 'error')
+        publishResultRef.current(d.result)
+      }
+    }
+    window.addEventListener('message', onMsg)
+    const ping = () => window.postMessage({ source: 'xuehaoke-admin', type: 'PING' }, '*')
+    ping()
+    const timer = setInterval(ping, 2000)
+    return () => { window.removeEventListener('message', onMsg); clearInterval(timer) }
+  }, [])
 
   const openCreate = () => {
     setIsEditing(false); setEditingId(null)
@@ -185,6 +233,105 @@ export default function AdminResourcesPage() {
     }
   }
 
+  const openXianyu = (r: ResItem) => {
+    const material = buildXianyuMaterial({
+      title: r.title,
+      content: r.content,
+      price: (r as any).price,
+      cover: r.cover,
+    })
+    setXyRes(r)
+    setXyTitle(material.title)
+    setXyDesc(material.description)
+    setXyPrice(material.price)
+    setXyHits(material.hits)
+    setXyStatus(r.xianyuStatus === 'listed' ? 'listed' : 'none')
+    setXyItemId(r.xianyuItemId || '')
+    setXyUrl(r.xianyuUrl || '')
+    setXySending(false)
+    setXyOpen(true)
+  }
+
+  const xianyuImages = useMemo(() => {
+    const cover = xyRes?.cover
+    if (!cover) return []
+    try { return [new URL(cover, window.location.origin).href] } catch { return [] }
+  }, [xyRes])
+
+  const submitXianyu = () => {
+    if (!xyTitle.trim()) { toast('标题不能为空', 'error'); return }
+    setXySending(true)
+    window.postMessage({
+      source: 'xuehaoke-admin',
+      type: 'PUBLISH',
+      payload: {
+        resourceId: xyRes?.id ?? null,
+        title: xyTitle.trim(),
+        description: xyDesc.trim(),
+        price: Number(xyPrice) || 0,
+        images: xianyuImages,
+        autoSubmit: xyAutoSubmit,
+      },
+    }, '*')
+    window.setTimeout(() => setXySending(false), 6000)
+  }
+
+  const copyXianyuText = async () => {
+    const text = [xyTitle.trim(), xyDesc.trim()].filter(Boolean).join('\n\n')
+    try {
+      await navigator.clipboard.writeText(text)
+      toast('文案已复制', 'success')
+    } catch {
+      toast('复制失败，请手动选择文本复制', 'error')
+    }
+  }
+
+  // 保存闲鱼关联信息（状态 / 商品ID / 链接），用于手动关联早期已上架的宝贝
+  const saveXianyuLink = async () => {
+    if (!xyRes) return
+    setXySavingLink(true)
+    try {
+      const res = await fetch(`/api/admin/resources/${xyRes.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          xianyuStatus: xyStatus,
+          xianyuItemId: xyItemId.trim(),
+          xianyuUrl: xyUrl.trim(),
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (data?.success) {
+        toast('闲鱼关联信息已保存', 'success')
+        fetchList()
+      } else {
+        toast(data?.message || '保存失败', 'error')
+      }
+    } finally {
+      setXySavingLink(false)
+    }
+  }
+
+  // 自动发布成功（已点击发布）后，回写资源的上架状态
+  const markXianyuListed = async (id: number) => {
+    const res = await fetch(`/api/admin/resources/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ xianyuStatus: 'listed' }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (data?.success) {
+      toast('已标记该资源为「闲鱼已上架」', 'success')
+      fetchList()
+    }
+  }
+
+  publishResultRef.current = (result: any) => {
+    if (result?.ok && result?.submitted && result?.resourceId) {
+      void markXianyuListed(Number(result.resourceId))
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -219,6 +366,7 @@ export default function AdminResourcesPage() {
                   
                   <th className="py-2 pr-4">标签</th>
                   <th className="py-2 pr-4">下载信息</th>
+                  <th className="py-2 pr-4">闲鱼</th>
                   <th className="py-2 pr-4">操作</th>
                 </tr>
               </thead>
@@ -242,11 +390,23 @@ export default function AdminResourcesPage() {
                     </td>
                     <td className="py-2 pr-4">
                       {r.downloads.length ? (
-                        <span className="text-xs text-muted-foreground truncate inline-block max-w-[160px]">{r.downloads[0].url}{r.downloads[0].code ? ` / ${r.downloads[0].code}` : ''}</span>
+                        <span className="text-xs text-muted-foreground truncate inline-block max-w-40">{r.downloads[0].url}{r.downloads[0].code ? ` / ${r.downloads[0].code}` : ''}</span>
                       ) : <span className="text-xs text-muted-foreground">无</span>}
                     </td>
                     <td className="py-2 pr-4">
+                      {r.xianyuStatus === 'listed' ? (
+                        <span className="inline-block px-2 py-1 text-xs rounded bg-green-100 text-green-700">已上架</span>
+                      ) : (
+                        <span className="inline-block px-2 py-1 text-xs rounded bg-secondary text-muted-foreground">未上架</span>
+                      )}
+                      {r.xianyuItemId ? <div className="text-xs text-muted-foreground mt-1">ID: {r.xianyuItemId}</div> : null}
+                      {r.xianyuUrl ? (
+                        <a href={r.xianyuUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block">查看宝贝</a>
+                      ) : null}
+                    </td>
+                    <td className="py-2 pr-4">
                       <div className="flex gap-2">
+                        <button className="btn btn-secondary btn-sm" onClick={() => openXianyu(r)}>{r.xianyuStatus === 'listed' ? '闲鱼已上架' : '上架闲鱼'}</button>
                         <button className="btn btn-secondary btn-sm" onClick={() => openEdit(r)}>编辑</button>
                         <button className="btn btn-destructive btn-sm" onClick={() => { setDelId(r.id); setDelStep(1) }}>删除</button>
                       </div>
@@ -420,6 +580,90 @@ export default function AdminResourcesPage() {
           <div className="flex justify-end gap-2">
             <button className="btn btn-secondary" onClick={() => setModalOpen(false)}>取消</button>
             <button className="btn btn-primary" onClick={submitForm}>{isEditing ? '保存' : '创建'}</button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={xyOpen} title="闲鱼上架 / 关联" onClose={() => setXyOpen(false)}>
+        <div className="space-y-4">
+          {/* 关联信息：手动关联早期已上架的宝贝 */}
+          <div className="rounded border p-3 space-y-3">
+            <div className="text-sm font-semibold text-foreground">闲鱼关联</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-muted-foreground">上架状态</label>
+                <select value={xyStatus} onChange={(e) => setXyStatus(e.target.value as 'none' | 'listed')} className="input w-full">
+                  <option value="none">未上架</option>
+                  <option value="listed">已上架</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">闲鱼商品ID（可选）</label>
+                <input value={xyItemId} onChange={(e) => setXyItemId(e.target.value)} className="input w-full" placeholder="如 812345678901" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">闲鱼宝贝链接（可选）</label>
+              <input value={xyUrl} onChange={(e) => setXyUrl(e.target.value)} className="input w-full" placeholder="https://www.goofish.com/item?id=..." />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">早期手动上架的宝贝，在这里填 ID/链接并设为「已上架」即可完成关联</span>
+              <button className="btn btn-secondary btn-sm shrink-0" disabled={xySavingLink} onClick={saveXianyuLink}>
+                {xySavingLink ? '保存中…' : '保存关联'}
+              </button>
+            </div>
+          </div>
+
+          {!xyExtReady && (
+            <div className="rounded border border-amber-300 bg-amber-50 text-amber-800 text-xs p-3 space-y-1">
+              <div className="font-semibold">未检测到「闲鱼一键上架」浏览器扩展</div>
+              <div>1. 打开 Chrome 的 chrome://extensions ，右上角开启「开发者模式」</div>
+              <div>2. 点击「加载已解压的扩展程序」，选择项目中的 extension 目录</div>
+              <div>3. 在同一个浏览器里登录闲鱼（goofish.com），然后刷新本页面</div>
+            </div>
+          )}
+          {xyHits.length > 0 && (
+            <div className="rounded border bg-secondary/50 text-xs p-3">
+              <div className="font-semibold text-foreground mb-1">已自动替换违规关键词（可直接手动改回）</div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
+                {xyHits.map(h => (
+                  <span key={`${h.word}-${h.replacement}`}>{h.word} → {h.replacement}（{h.count}）</span>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
+            <label className="text-xs text-muted-foreground">商品标题</label>
+            <input value={xyTitle} onChange={(e) => setXyTitle(e.target.value)} className="input w-full" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-muted-foreground">价格（元）</label>
+              <input type="number" step="0.01" value={xyPrice} onChange={(e) => setXyPrice(e.target.value === '' ? '' : Number(e.target.value))} className="input w-full" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">封面图（{xianyuImages.length} 张）</label>
+              <div className="mt-2">
+                {xyRes?.cover ? <img src={xyRes.cover} alt="cover" className="w-14 h-14 object-cover rounded border" /> : <span className="text-xs text-muted-foreground">该资源无封面，将不上传图片</span>}
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">宝贝描述（{xyDesc.length} 字）</label>
+            <textarea value={xyDesc} onChange={(e) => setXyDesc(e.target.value)} className="input w-full h-[220px] resize-vertical" />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input type="checkbox" checked={xyAutoSubmit} onChange={(e) => setXyAutoSubmit(e.target.checked)} />
+            填充完成后自动点击「发布」（关闭则只填充，由你在闲鱼页面手动发布）
+          </label>
+          <div className="flex items-center justify-between gap-2">
+            <button className="btn btn-secondary" onClick={copyXianyuText}>复制文案</button>
+            <div className="flex gap-2">
+              <button className="btn btn-secondary" onClick={() => setXyOpen(false)}>取消</button>
+              <button className="btn btn-primary" disabled={xySending || !xyExtReady} onClick={submitXianyu}>
+                {xySending ? '发送中…' : '一键上架'}
+              </button>
+            </div>
           </div>
         </div>
       </Modal>

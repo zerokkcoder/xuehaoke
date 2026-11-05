@@ -33,10 +33,22 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     tags,
     download,
     price,
+    xianyuStatus, xianyuItemId, xianyuUrl,
   } = body
   try {
-    const current = await prisma.resource.findUnique({ where: { id: idNum }, select: { categoryId: true } })
+    const current = await prisma.resource.findUnique({ where: { id: idNum }, select: { categoryId: true, xianyuStatus: true } })
     const nextCategoryId = categoryId !== undefined ? Number(categoryId) : (current?.categoryId ?? undefined)
+
+    // 闲鱼上架关联状态
+    const xianyuData: any = {}
+    if (xianyuStatus !== undefined) {
+      const nextStatus = xianyuStatus === 'listed' ? 'listed' : 'none'
+      xianyuData.xianyuStatus = nextStatus
+      if (nextStatus === 'listed' && current?.xianyuStatus !== 'listed') xianyuData.xianyuListedAt = new Date()
+      if (nextStatus === 'none') xianyuData.xianyuListedAt = null
+    }
+    if (xianyuItemId !== undefined) xianyuData.xianyuItemId = xianyuItemId ? String(xianyuItemId).trim() : null
+    if (xianyuUrl !== undefined) xianyuData.xianyuUrl = xianyuUrl ? String(xianyuUrl).trim() : null
 
     let nextSubcategoryId: number | null | undefined = undefined
     if (subcategoryId === null) {
@@ -105,6 +117,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         hotScore: hotScore !== undefined ? Number(hotScore) : undefined,
         categoryId: categoryId !== undefined ? Number(categoryId) : undefined,
         subcategoryId: nextSubcategoryId,
+        ...xianyuData,
         // set tags via upsert by replacing join table
         ...(tagIds ? { tags: { deleteMany: {}, create: tagIds.map(id => ({ tagId: id })) } } : {}),
         // downloads: maintain single record; update or create

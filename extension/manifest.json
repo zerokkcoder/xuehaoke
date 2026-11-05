@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "学好课 · 闲鱼一键上架",
+  "version": "1.0.0",
+  "description": "从学好课后台一键将资源上架到闲鱼（goofish.com）：自动填充标题、描述、价格与封面图，并可自动点击发布。",
+  "permissions": ["storage", "tabs", "unlimitedStorage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost/*",
+        "http://127.0.0.1/*",
+        "https://www.xuehaoke.top/*",
+        "https://xuehaoke.top/*"
+      ],
+      "js": ["content-admin.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["https://www.goofish.com/*"],
+      "js": ["content-xianyu.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}
