@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server'
 import { getAlipay } from '@/lib/alipay'
 import prisma from '@/lib/prisma'
+import { grantOrderEntitlement } from '@/lib/entitlement'
 
 export async function POST(req: Request) {
   // Alipay sends form-urlencoded; parse raw text
@@ -23,45 +23,25 @@ export async function POST(req: Request) {
   }
   const newStatus = statusMap[tradeStatus] || 'pending'
   try {
-    const order = await prisma.order.update({
-      where: { outTradeNo },
-      data: {
-        tradeNo,
-        status: newStatus,
-        paidAt: newStatus === 'success' ? new Date() : undefined,
-        notifyRaw: params,
-      },
-    })
+    await prisma.$transaction(async (tx) => {
+      const existing = await tx.order.findUnique({ where: { outTradeNo } })
+      if (!existing) return
 
-    // 若订单支付成功，按类型发放权益
-    if (newStatus === 'success') {
-      if (order.orderType === 'member' && order.userId) {
-        // 会员开通：根据计划时长设置到期时间，durationDays=0 为永久
-        const plan = await prisma.membershipPlan.findUnique({ where: { id: order.productId } })
-        if (plan) {
-          let expire: Date | null = null
-          if (plan.durationDays > 0) {
-            expire = new Date()
-            expire.setDate(expire.getDate() + plan.durationDays)
-          }
-          await prisma.user.update({
-            where: { id: order.userId },
-            data: {
-              isVip: true,
-              vipPlanId: plan.id,
-              vipExpireAt: expire || null,
-            }
-          })
-        }
-      } else if (order.orderType === 'course' && order.userId) {
-        // 课程购买：记录用户资源访问授权
-        await prisma.userResourceAccess.upsert({
-          where: { userId_resourceId: { userId: order.userId, resourceId: order.productId } },
-          update: {},
-          create: { userId: order.userId, resourceId: order.productId }
-        })
+      const updated = await tx.order.update({
+        where: { outTradeNo },
+        data: {
+          tradeNo,
+          status: newStatus,
+          paidAt: newStatus === 'success' ? (existing.paidAt ?? new Date()) : undefined,
+          notifyRaw: params,
+        },
+      })
+
+      // 仅在订单首次变为已支付时发放权益，避免重复回调叠加会员时长
+      if (newStatus === 'success' && existing.status !== 'success') {
+        await grantOrderEntitlement(tx, updated)
       }
-    }
+    })
   } catch (e) {
     console.warn('update order failed', e)
   }

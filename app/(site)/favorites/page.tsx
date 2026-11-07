@@ -19,15 +19,9 @@ export default function FavoritesPage() {
   const [q, setQ] = useState('')
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem('site_user')
-      if (!raw) { setUserVip(false); return }
-      const u = JSON.parse(raw)
-      const username = u?.username
-      if (!username) { setUserVip(false); return }
-      fetch('/api/user/me', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username })
-      }).then(async (res) => {
+    // 登录态由站点 Cookie 决定，服务端返回 401 即视为未登录
+    fetch('/api/user/me', { method: 'POST', cache: 'no-store' })
+      .then(async (res) => {
         const json = await res.json().catch(() => null)
         if (res.ok && json?.success) {
           const expire = json.data?.vipExpireAt ? new Date(json.data.vipExpireAt) : null
@@ -38,7 +32,6 @@ export default function FavoritesPage() {
           setUserVip(false)
         }
       }).catch(() => { setUserVip(false) })
-    } catch { setUserVip(false) }
   }, [])
 
   useEffect(() => {

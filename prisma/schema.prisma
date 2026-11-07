@@ -68,6 +68,7 @@ model Resource {
   downloads      ResourceDownload[]
   accesses       UserResourceAccess[]
 
+  @@index([updatedAt])
   @@map("resources")
 }
 
@@ -130,6 +131,10 @@ model User {
   vipExpireAt   DateTime? @map("vip_expire_at")
   vipPlan       MembershipPlan? @relation(fields: [vipPlanId], references: [id])
 
+  // VIP 每日下载额度计数（按自然日重置）
+  dailyDownloadCount Int       @default(0) @map("daily_download_count")
+  dailyDownloadDate  DateTime? @map("daily_download_date")
+
   orders        Order[]
   resourceAccesses UserResourceAccess[]
 
@@ -184,6 +189,8 @@ model Order {
 
   user        User?    @relation(fields: [userId], references: [id])
 
+  @@index([status])
+  @@index([createdAt])
   @@map("orders")
 }
 

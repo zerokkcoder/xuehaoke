@@ -50,11 +50,7 @@ export default function LoginPage() {
             let avatarUrl: string | undefined
             let isVip = false
             try {
-              const meRes = await fetch('/api/user/me', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: u.username })
-              })
+              const meRes = await fetch('/api/user/me', { method: 'POST' })
               const meJson = await meRes.json().catch(() => ({}))
               if (meRes.ok && meJson?.success) {
                 avatarUrl = meJson?.data?.avatarUrl || undefined

@@ -7,15 +7,9 @@ export default function FavoritesFloatingButton({ className = '' }: { className?
   const [vip, setVip] = useState<boolean | null>(null)
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem('site_user')
-      if (!raw) { setTimeout(() => setVip(false), 0); return }
-      const u = JSON.parse(raw)
-      const username = u?.username
-      if (!username) { setTimeout(() => setVip(false), 0); return }
-      fetch('/api/user/me', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username })
-      }).then(async (res) => {
+    // 登录态由站点 Cookie 决定，服务端返回 401 即视为未登录
+    fetch('/api/user/me', { method: 'POST', cache: 'no-store' })
+      .then(async (res) => {
         const json = await res.json().catch(() => null)
         if (res.ok && json?.success) {
           const expire = json.data?.vipExpireAt ? new Date(json.data.vipExpireAt) : null
@@ -23,10 +17,10 @@ export default function FavoritesFloatingButton({ className = '' }: { className?
           const active = !!json.data?.isVip && (expire ? expire > now : true)
           setVip(active)
         } else {
-          setTimeout(() => setVip(false), 0)
+          setVip(false)
         }
-      }).catch(() => { setTimeout(() => setVip(false), 0) })
-    } catch { setTimeout(() => setVip(false), 0) }
+      })
+      .catch(() => setVip(false))
   }, [])
 
   if (!vip) return null

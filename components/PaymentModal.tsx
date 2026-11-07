@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import { useToast } from '@/components/Toast'
 import { motion, AnimatePresence } from "motion/react"
 import { QRCodeSVG } from 'qrcode.react'
-// import { processPayment, generateOrderId, paymentMethods, createPaymentStatus } from '@/lib/payment'
 
 interface PaymentModalProps {
   isOpen: boolean

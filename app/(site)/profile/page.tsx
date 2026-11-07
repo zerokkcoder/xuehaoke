@@ -87,8 +87,6 @@ export default function ProfilePage() {
       try {
         const res = await fetch('/api/user/me', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: localUser.username }),
           cache: 'no-store',
         })
         const json = await res.json().catch(() => ({}))
@@ -108,7 +106,7 @@ export default function ProfilePage() {
     const fetchDownloads = async () => {
       if (!localUser?.username) return
       try {
-        const res = await fetch('/api/user/downloads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: localUser.username }), cache: 'no-store' })
+        const res = await fetch('/api/user/downloads', { method: 'POST', cache: 'no-store' })
         const json = await res.json().catch(() => ({}))
         if (res.ok && json?.success) {
           const list = Array.isArray(json.data) ? json.data : []
@@ -119,7 +117,7 @@ export default function ProfilePage() {
     const fetchOrders = async () => {
       if (!localUser?.username) return
       try {
-        const res = await fetch('/api/user/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: localUser.username }), cache: 'no-store' })
+        const res = await fetch('/api/user/orders', { method: 'POST', cache: 'no-store' })
         const json = await res.json().catch(() => ({}))
         if (res.ok && json?.success) {
           const list = Array.isArray(json.data) ? json.data : []
@@ -151,7 +149,7 @@ export default function ProfilePage() {
         const saveRes = await fetch('/api/user/avatar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: localUser?.username, avatarUrl: url }),
+          body: JSON.stringify({ avatarUrl: url }),
         })
         const saveJson = await saveRes.json().catch(() => ({}))
         if (!saveRes.ok || !saveJson?.success) {

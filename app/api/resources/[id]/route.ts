@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
+import { getSiteUserId } from '@/lib/site-auth'
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -20,18 +20,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     })
     if (!r) return NextResponse.json({ success: false, message: '资源不存在' }, { status: 404 })
 
-    // 解析站点用户 Cookie，判断下载权限
-    let userId: number | null = null
-    try {
-      const cookieHeader = (req as any).headers.get('cookie') || ''
-      const match = cookieHeader.match(/site_token=([^;]+)/)
-      const token = match ? match[1] : ''
-      if (token) {
-        const secret = process.env.SITE_JWT_SECRET || 'site_dev_secret_change_me'
-        const payload = jwt.verify(token, secret) as any
-        userId = Number(payload?.uid) || null
-      }
-    } catch {}
+    // 从站点登录 Cookie 解析用户，判断下载权限
+    const userId = getSiteUserId(req)
 
     let hasAccess = false
     let isVip = false

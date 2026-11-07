@@ -4,11 +4,9 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/components/Toast';
 import Link from 'next/link';
 import ResourceCard from '@/components/ResourceCard';
-import { resources, currentUser } from '@/lib/utils';
 import { StarIcon, EyeIcon, ArrowDownTrayIcon, ClockIcon, UserIcon, TagIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import PaymentModal from '@/components/PaymentModal'
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
-import { checkDownloadRestrictions, processDownload, DownloadResult, getUserDownloadQuota } from '@/lib/download';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -30,7 +28,6 @@ export default function ResourceDetailClient({
   const { toast } = useToast();
   // Use initial data from props, can be updated via client-side logic if needed
   const [resource, setResource] = useState<any>(initialResource);
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [prevNext, setPrevNext] = useState(initialPrevNext)
   const [hotTags, setHotTags] = useState(initialHotTags)
@@ -53,17 +50,12 @@ export default function ResourceDetailClient({
     const checkAccess = async () => {
       try {
         if (!resource) return
-        // If we already have download info from SSR (e.g. public resource or implicit logic), use it
-        // Note: For sensitive access (purchased/VIP), usually we need client-side auth token or cookie check
-        // If server rendered limited info, we try to fetch full access info if logged in
-        const raw = window.localStorage.getItem('site_user')
-        if (!raw) { setAccessChecked(true); return }
-        const u = JSON.parse(raw)
-        const username = u?.username
-        if (!username) { setAccessChecked(true); return }
+        // 登录态由站点 Cookie（site_token）在服务端校验，前端不再传递 username
         const res = await fetch('/api/resources/access', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resourceId: Number(resource.id), username })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ resourceId: Number(resource.id) })
         })
         const json = await res.json().catch(() => null)
         if (res.ok && json?.success) {
@@ -88,7 +80,6 @@ export default function ResourceDetailClient({
     })()
   }, [resource?.id])
 
-  const restrictions = checkDownloadRestrictions(resource, currentUser);
   const extractionCode = resource.downloadCode || '';
   const tagColors = ['#1f2937','#374151','#4b5563','#2563eb','#7c3aed','#0f766e','#b91c1c','#6b21a8','#1d4ed8','#15803d'];
   
@@ -120,48 +111,49 @@ export default function ResourceDetailClient({
   }
 
   const handleDownload = async () => {
-    const restrictions = checkDownloadRestrictions(resource, currentUser);
+    const price = Number(resource.price || 0);
 
-    if (!restrictions.canDownload && !hasAccess) {
-      if (!currentUser) {
-        window.location.href = '/login';
-        return;
-      }
-
-      if (restrictions.requiresVip) {
-        setShowDownloadModal(true);
-        return;
-      }
-
-      if (restrictions.requiresPayment) {
-        try {
-          const meRes = await fetch('/api/auth/me', { method: 'GET', credentials: 'same-origin' })
-          if (!meRes.ok) { toast('请先登录后再支付', 'info'); return }
-          const me = await meRes.json().catch(() => null)
-          if (!me?.authenticated) { toast('请先登录后再支付', 'info'); return }
-        } catch {
-          toast('请先登录后再支付', 'info');
+    // 有权限（已购买 / VIP）或免费资源：直接走服务端下载接口（服务端会校验权限与每日额度）
+    if (serverAuthorized || hasAccess || price <= 0) {
+      try {
+        const res = await fetch(`/api/resources/${resource.id}/download`, {
+          method: 'POST',
+          credentials: 'same-origin',
+        })
+        const json = await res.json().catch(() => null)
+        if (!res.ok || !json?.success) {
+          if (res.status === 401) { window.location.href = '/login'; return }
+          toast(json?.message || '下载失败', 'error')
           return
         }
-        setShowPaymentModal(true);
-        return;
+        toast(json?.message || '下载开始', 'success')
+        const url = json?.data?.downloadUrl || resource.downloadUrl
+        if (url) {
+          window.location.href = url
+        } else {
+          toast('下载链接暂不可用，请联系客服', 'error')
+        }
+      } catch {
+        toast('下载失败，请重试', 'error')
       }
-
-      toast(restrictions.reason || '无法下载', 'error');
-      return;
+      return
     }
 
-    const result: DownloadResult = await processDownload(resource, currentUser);
-    
-    if (result.success) {
-      toast(`${result.message} (交易ID: ${result.transactionId})`, 'success');
-      try { await fetch(`/api/resources/${resource.id}/download`, { method: 'POST' }) } catch {}
-      if (resource.downloadUrl) {
-        window.location.href = resource.downloadUrl;
+    // 无权限：未登录去登录，已登录去付费/升级 VIP
+    try {
+      const meRes = await fetch('/api/auth/me', { method: 'GET', credentials: 'same-origin' })
+      const me = meRes.ok ? await meRes.json().catch(() => null) : null
+      if (!me?.authenticated) {
+        toast('请先登录后再支付', 'info')
+        window.location.href = '/login'
+        return
       }
-    } else {
-      toast(result.message || '下载失败', 'error');
+    } catch {
+      toast('请先登录后再支付', 'info')
+      window.location.href = '/login'
+      return
     }
+    setShowPaymentModal(true)
   };
 
   if (!resource) {
@@ -483,29 +475,6 @@ export default function ResourceDetailClient({
           </div>
         </div>
       </div>
-
-      {/* Download Modal */}
-      {showDownloadModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="card p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-foreground mb-4">VIP专享资源</h3>
-            <p className="text-muted-foreground mb-6">
-              此资源为VIP专享，需要开通VIP会员才能下载。
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDownloadModal(false)}
-                className="flex-1 btn btn-secondary"
-              >
-                取消
-              </button>
-              <Link href="/vip" className="flex-1 btn btn-accent">
-                开通VIP
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       <PaymentModal
         isOpen={showPaymentModal}

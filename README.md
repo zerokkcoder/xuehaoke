@@ -71,6 +71,17 @@
     ADD COLUMN `xianyu_url`       varchar(191) DEFAULT NULL,
     ADD COLUMN `xianyu_listed_at` datetime(3)  DEFAULT NULL;
   ```
+- VIP 每日下载额度相关字段为增量改动（`users` 表新增 2 个列），也可直接执行：
+  ```sql
+  ALTER TABLE `users`
+    ADD COLUMN `daily_download_count` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `daily_download_date`  DATETIME(3) NULL;
+
+  CREATE INDEX `orders_status_idx`       ON `orders`    (`status`);
+  CREATE INDEX `orders_created_at_idx`   ON `orders`    (`created_at`);
+  CREATE INDEX `resources_updatedAt_idx` ON `resources` (`updatedAt`);
+  ```
+  > 以上 SQL 可用 `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script` 复现，确认为纯增量改动。
 
 ## 部署教程
 [部署教程](docs/deploy.md)

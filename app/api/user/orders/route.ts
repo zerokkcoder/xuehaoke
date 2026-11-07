@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { getSiteUserId } from '@/lib/site-auth'
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => ({}))
-    const username = String(body?.username || '').trim()
-    if (!username) return NextResponse.json({ success: false, message: '缺少用户名' }, { status: 400 })
-
-    const user = await prisma.user.findUnique({ where: { username } })
-    if (!user) return NextResponse.json({ success: false, message: '用户不存在' }, { status: 404 })
+    // 只认站点登录 Cookie，忽略请求体中的 username
+    const userId = getSiteUserId(req)
+    if (!userId) return NextResponse.json({ success: false, message: '请先登录', data: [] }, { status: 401 })
 
     const orders = await prisma.order.findMany({
-      where: { userId: user.id },
+      where: { userId },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,

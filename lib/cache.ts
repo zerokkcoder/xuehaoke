@@ -8,6 +8,7 @@ const KEY_SITE_SETTINGS = 'site_settings'
 const KEY_CATEGORIES = 'categories'
 const KEY_PLANS = 'plans'
 const KEY_HOMEPAGE_RESOURCES = 'homepage_resources'
+const KEY_GUESS_RESOURCES = 'guess_resources'
 
 export async function getCachedLatestResources(limit = 10) {
   const cached = await redis.get(KEY_LATEST_RESOURCES)
@@ -159,10 +160,36 @@ export async function getCachedHomepageResources() {
   return result
 }
 
+// 「猜你喜欢」随机资源：用随机偏移替代 ORDER BY RAND()，避免大表全表扫描
+export async function getCachedGuessResources(limit = 6) {
+  const cached = await redis.get(KEY_GUESS_RESOURCES)
+  if (cached) {
+    try {
+      return JSON.parse(cached)
+    } catch (e) {
+      console.error('Redis parse error:', e)
+    }
+  }
+
+  const total = await prisma.resource.count()
+  const skip = total > limit ? Math.floor(Math.random() * (total - limit)) : 0
+  const data = await prisma.resource.findMany({
+    skip,
+    take: limit,
+    orderBy: { id: 'asc' },
+    select: { id: true, title: true, cover: true },
+  })
+
+  // 较短 TTL，让推荐内容能轮换
+  await redis.set(KEY_GUESS_RESOURCES, JSON.stringify(data), 'EX', 10 * 60)
+  return data
+}
+
 export async function invalidateResourceCache() {
   await redis.del(KEY_LATEST_RESOURCES)
   await redis.del(KEY_HOT_TAGS)
   await redis.del(KEY_HOMEPAGE_RESOURCES)
+  await redis.del(KEY_GUESS_RESOURCES)
 }
 
 export async function invalidateSiteSettingsCache() {

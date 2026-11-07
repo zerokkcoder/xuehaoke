@@ -1,18 +1,22 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { getSiteUserId } from '@/lib/site-auth'
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => ({}))
-    const username = String(body?.username || '').trim()
-    if (!username) return NextResponse.json({ success: false, message: '缺少用户名' }, { status: 400 })
-    const user = await prisma.user.findUnique({ where: { username }, include: { vipPlan: true } })
-    if (!user) return NextResponse.json({ success: false, message: '用户不存在' }, { status: 404 })
+    // 只认站点登录 Cookie，忽略请求体中的 username
+    const userId = getSiteUserId(req)
+    if (!userId) return NextResponse.json({ success: false, message: '请先登录' }, { status: 401 })
+
+    const user = await prisma.user.findUnique({ where: { id: userId }, include: { vipPlan: true } })
+    if (!user) return NextResponse.json({ success: false, message: '用户不存在' }, { status: 401 })
+
     let avatarUrl: string | null = null
     try {
       const rows: any[] = await prisma.$queryRawUnsafe('SELECT avatar_url FROM users WHERE id = ? LIMIT 1', user.id)
       avatarUrl = rows?.[0]?.avatar_url ?? null
     } catch {}
+
     // Check if VIP is expired
     const now = new Date()
     const isExpired = user.vipExpireAt && new Date(user.vipExpireAt) < now

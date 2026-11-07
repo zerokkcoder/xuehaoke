@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getAlipay } from '@/lib/alipay'
 import prisma from '@/lib/prisma'
+import { grantOrderEntitlement } from '@/lib/entitlement'
 
 export async function POST(req: Request) {
   try {
@@ -34,30 +35,7 @@ export async function POST(req: Request) {
           })
           
           // Grant entitlements
-          if (order.orderType === 'member' && order.userId) {
-             const plan = await tx.membershipPlan.findUnique({ where: { id: order.productId } })
-             if (plan) {
-               let expire: Date | null = null
-               if (plan.durationDays > 0) {
-                 expire = new Date()
-                 expire.setDate(expire.getDate() + plan.durationDays)
-               }
-               await tx.user.update({
-                 where: { id: order.userId },
-                 data: {
-                   isVip: true,
-                   vipPlanId: plan.id,
-                   vipExpireAt: expire || null,
-                 }
-               })
-             }
-          } else if (order.orderType === 'course' && order.userId) {
-            await tx.userResourceAccess.upsert({
-              where: { userId_resourceId: { userId: order.userId, resourceId: order.productId } },
-              update: {},
-              create: { userId: order.userId, resourceId: order.productId }
-            })
-          }
+          await grantOrderEntitlement(tx, order)
         }
       })
     } else if (status === 'TRADE_CLOSED') {

@@ -59,23 +59,15 @@ export default function VIPPage() {
     loadPlans();
   }, [toast]);
 
-  // 查询用户VIP到期时间（永久显示“永久”）
+  // 查询用户VIP到期时间（永久显示“永久”）；登录态由站点 Cookie 决定
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem('site_user')
-      if (!raw) return
-      const u = JSON.parse(raw)
-      const username = u?.username
-      if (!username) return
-      fetch('/api/user/me', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username })
-      }).then(async (res) => {
+    fetch('/api/user/me', { method: 'POST', cache: 'no-store' })
+      .then(async (res) => {
         const json = await res.json().catch(() => null)
         if (res.ok && json?.success) {
           setUserVip({ isVip: !!json.data?.isVip, vipExpireAt: json.data?.vipExpireAt, vipPlanName: json.data?.vipPlanName, vipPlanId: json.data?.vipPlanId ?? null })
         }
       }).catch(() => {})
-    } catch {}
   }, [])
 
   

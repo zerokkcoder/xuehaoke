@@ -1,6 +1,9 @@
 import { MetadataRoute } from 'next'
 import prisma from '@/lib/prisma'
 
+// 缓存 sitemap 1 小时，避免每次爬取都全量查询分类/标签/资源
+export const revalidate = 3600
+
 // 规范化 URL：移除 trailing slash，确保格式一致
 function normalizeUrl(url: string): string {
   return url.replace(/\/$/, '')

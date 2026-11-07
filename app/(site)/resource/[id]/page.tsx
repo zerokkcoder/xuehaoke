@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
-import { headers, cookies } from 'next/headers'
+import { cookies } from 'next/headers'
 import ResourceDetailClient from './ResourceDetailClient'
-import { getCachedLatestResources, getCachedHotTags } from '@/lib/cache'
+import { getCachedLatestResources, getCachedHotTags, getCachedGuessResources } from '@/lib/cache'
 import jwt from 'jsonwebtoken'
 
 export const revalidate = 0 // Disable cache for dynamic auth check or use logic below
@@ -84,7 +84,7 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
     }),
     getCachedHotTags(),
     getCachedLatestResources(),
-    prisma.$queryRawUnsafe<any[]>('SELECT id, title, cover FROM resources ORDER BY RAND() LIMIT 6')
+    getCachedGuessResources()
   ])
 
   // 3. Process tags (handled by cache)
