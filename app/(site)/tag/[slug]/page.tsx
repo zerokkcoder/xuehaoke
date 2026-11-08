@@ -1,8 +1,14 @@
 import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import TagDetailClient from './TagDetailClient'
+import { getSiteUrl } from '@/lib/seo'
 
 export const revalidate = 3600 // ISR cache for 1 hour
+
+// 声明为「按需生成 + ISR 缓存」：仅在首次访问时渲染并缓存，之后命中缓存
+export function generateStaticParams() {
+  return []
+}
 
 const tagDescriptions: Record<string, string> = {
   'java': 'Java视频教程合集，提供Java入门到精通的全套视频课程。涵盖Java基础、SpringBoot、SpringCloud、微服务架构等核心技术栈。课程由慕课网、黑马程序员等知名机构出品，全部支持免费下载。',
@@ -46,7 +52,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const description = generateTagDescription(tag.name, tagSlug)
   const title = `${tag.name}视频教程合集 - 免费下载 | 学好课`
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://xuehaoke.top'
+  const siteUrl = getSiteUrl()
 
   return {
     title,

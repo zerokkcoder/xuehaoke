@@ -1,10 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { motion, AnimatePresence } from "motion/react"
-import { X } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import OrderPaymentModal from '@/components/OrderPaymentModal'
 
@@ -26,7 +24,16 @@ function maskEmail(email: string) {
   return `${visible}****@${domain}`
 }
 
+// useSearchParams 需要在 Suspense 边界内使用，否则整页无法静态预渲染（?tab= 由客户端读取）
 export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <ProfileContent />
+    </Suspense>
+  )
+}
+
+function ProfileContent() {
   const [localUser, setLocalUser] = useState<SiteUser | null>(null)
   const [me, setMe] = useState<MeData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -204,7 +211,7 @@ export default function ProfilePage() {
           <div className="relative w-full h-40 md:h-52 overflow-hidden card">
             <Image
               src={siteConfig?.heroImage || "/haike_hero.svg"}
-              alt="Profile Hero"
+              alt="个人中心页横幅"
               fill
               className="object-cover"
               priority
@@ -328,7 +335,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full overflow-hidden border border-border bg-white">
                     {avatarUrl ? (
-                      <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                      <img src={avatarUrl} alt="我的头像" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">无头像</div>
                     )}
@@ -391,7 +398,7 @@ export default function ProfilePage() {
                   <div className="mt-4">
                     <h3 className="text-sm font-semibold text-foreground mb-2">最近下载</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {recentDownloads.map((d, idx) => (
+                      {recentDownloads.map((d) => (
                         <div key={`${d.resourceId}-${d.accessedAt}`} className="flex items-center gap-3 p-2 border border-border rounded-md">
                           <div className="relative w-16 h-12 overflow-hidden rounded bg-white">
                             <Image src={d.cover || 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=320&h=240&fit=crop'} alt={d.title} fill className="object-cover" unoptimized suppressHydrationWarning />
@@ -433,7 +440,7 @@ export default function ProfilePage() {
                           <tr key={o.id} className="border-b border-border">
                             <td className="py-2 pr-4 truncate max-w-[180px]">{o.outTradeNo}</td>
                             <td className="py-2 pr-4">{o.orderType === 'course' ? '课程' : o.orderType === 'member' ? '会员' : o.orderType}</td>
-                            <td className="py-2 pr-4 truncate max-w-[240px]">{o.productName}</td>
+                            <td className="py-2 pr-4 truncate max-w-60">{o.productName}</td>
                             <td className="py-2 pr-4 text-red-600 font-medium">¥{o.amount}</td>
                             <td className={`py-2 pr-4 ${o.status === 'success' ? 'text-green-600' : o.status === 'pending' ? 'text-red-600' : 'text-zinc-500'}`}>
                               {o.status === 'success' ? '已支付' : o.status === 'pending' ? '待支付' : o.status === 'closed' ? '已关闭' : o.status}

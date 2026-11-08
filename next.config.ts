@@ -41,12 +41,6 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
       {
-        source: '/((?!api|_next/static|_next/image|favicon.ico|uploads).*)',
-        headers: [
-          { key: 'Cache-Control', value: 'no-store, max-age=0, must-revalidate' },
-        ],
-      },
-      {
         source: '/(.*)',
         headers: [
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },

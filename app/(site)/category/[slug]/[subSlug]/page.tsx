@@ -5,6 +5,11 @@ import SubcategoryDetailClient from './SubcategoryDetailClient'
 
 export const revalidate = 3600 // ISR cache for 1 hour
 
+// 声明为「按需生成 + ISR 缓存」：仅在首次访问时渲染并缓存，之后命中缓存
+export function generateStaticParams() {
+  return []
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; subSlug: string }> }): Promise<Metadata> {
   const { slug, subSlug } = await params
   const categorySlug = decodeURIComponent(slug)

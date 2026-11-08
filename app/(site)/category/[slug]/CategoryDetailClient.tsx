@@ -133,7 +133,7 @@ export default function CategoryDetailClient({
           <div className="relative w-full h-48 md:h-64 overflow-hidden card">
             <Image
               src={initialSiteConfig?.heroImage || "/haike_hero.svg"}
-              alt="Category Hero"
+              alt={`${initialCategory.name} 分类资源列表横幅`}
               fill
               sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover"

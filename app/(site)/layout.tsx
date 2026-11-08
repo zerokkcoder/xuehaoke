@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import Header from "@/components/Header";
-import prisma from "@/lib/prisma";
 import Footer from "@/components/Footer";
 import FloatingActions from "@/components/FloatingActions";
-import { headers } from "next/headers";
+import { getCachedCategories, getCachedSiteSettings } from '@/lib/cache';
+import { getSiteUrl } from '@/lib/seo';
+import UnpaidOrderReminder from "@/components/UnpaidOrderReminder";
 
-// 强制此布局动态渲染，避免首页等使用旧的站点设置缓存
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR：站点设置与分类都走缓存，页面可静态化并每小时后台再生（原来是 force-dynamic，导致全站不可缓存）
+export const revalidate = 3600
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,25 +22,13 @@ const geistMono = Geist_Mono({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = getSiteUrl()
   try {
-    const rows: { site_name: string | null; site_keywords: string | null; site_description: string | null; site_logo: string | null }[] = await prisma.$queryRawUnsafe('SELECT site_name, site_keywords, site_description, site_logo FROM site_settings LIMIT 1')
-    const r = rows?.[0]
-    const title = (r?.site_name ? `${r.site_name} - 专业资源下载平台` : '学好课 - 专业资源下载平台')
-    const description = r?.site_description || "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。"
-    const keywords = r?.site_keywords || "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计"
-    const logo = r?.site_logo || '/logo.png'
-    const hs = await headers()
-    const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
-    // const host = hs.get('x-forwarded-host') || hs.get('host') || ''
-    // 强制使用生产环境域名作为 Canonical URL，避免 HTTP/HTTPS 重复收录
-    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
-    if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
-      siteUrl = siteUrl.replace('http://', 'https://')
-    }
-    // 强制添加 www (如果没有)
-    if (process.env.NODE_ENV === 'production' && !siteUrl.includes('www.') && !siteUrl.includes('localhost')) {
-        siteUrl = siteUrl.replace('https://', 'https://www.')
-    }
+    const r = await getCachedSiteSettings()
+    const title = (r?.siteName ? `${r.siteName} - 专业资源下载平台` : '学好课 - 专业资源下载平台')
+    const description = r?.siteDescription || "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。"
+    const keywords = r?.siteKeywords || "资源下载,学习资料,开发工具,设计素材,编程教程,UI设计"
+    const logo = r?.siteLogo || '/logo.png'
     return {
       title,
       description,
@@ -51,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
       openGraph: {
         title,
         description,
-        siteName: r?.site_name || '学好课',
+        siteName: r?.siteName || '学好课',
         images: [{ url: logo }],
         type: 'website',
         locale: 'zh_CN',
@@ -64,17 +52,6 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     }
   } catch {
-    const hs = await headers()
-    const proto = hs.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
-    // const host = hs.get('x-forwarded-host') || hs.get('host') || ''
-    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
-    if (process.env.NODE_ENV === 'production' && siteUrl.startsWith('http://') && !siteUrl.includes('localhost')) {
-      siteUrl = siteUrl.replace('http://', 'https://')
-    }
-    // 强制添加 www (如果没有)
-    if (process.env.NODE_ENV === 'production' && !siteUrl.includes('www.') && !siteUrl.includes('localhost')) {
-        siteUrl = siteUrl.replace('https://', 'https://www.')
-    }
     return {
       title: "学好课 - 专业资源下载平台",
       description: "提供高质量的学习资料、开发工具、设计素材等资源下载服务，助力您的学习和工作。",
@@ -85,9 +62,6 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   }
 }
-
-import { getCachedCategories, getCachedSiteSettings } from '@/lib/cache'
-import UnpaidOrderReminder from "@/components/UnpaidOrderReminder";
 
 export default async function SiteLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   let initialCategories: { id: number; name: string; slug?: string | null; subcategories: { id: number; name: string; slug?: string | null }[] }[] = []

@@ -29,15 +29,15 @@ export default async function middleware(req: NextRequest) {
   }
 
   // 2. CSP 安全头处理
-  const nonce = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)).replace(/-/g, '')
-  const reqHeaders = new Headers(req.headers)
-  reqHeaders.set('x-nonce', nonce)
-  
+  // 说明：这里不再使用 per-request nonce。nonce 会强制 Next 对每个请求重新渲染 HTML
+  // （nonce 必须与 HTML 内联脚本一致，无法缓存），导致全站 Cache-Control: no-store、
+  // TTFB 偏高、爬虫抓取效率下降。改用 'unsafe-inline' 后页面可以走 ISR / 全量缓存。
+  // 同时收紧掉原先的 https: 通配脚本源（站内没有任何外部脚本依赖）。
   const csp = [
     "default-src 'self'",
     "img-src 'self' https: data: blob:",
     "font-src 'self' https: data:",
-    `script-src 'self' 'nonce-${nonce}' https: 'unsafe-eval'`, // unsafe-eval required for some Next.js dev features/libraries
+    "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline' https:",
     "connect-src 'self' https:",
     "frame-ancestors 'self'",
@@ -45,9 +45,7 @@ export default async function middleware(req: NextRequest) {
     'upgrade-insecure-requests',
   ].join('; ')
 
-  // Provide CSP in request so Next can extract nonce during SSR
-  reqHeaders.set('Content-Security-Policy', csp)
-  const res = NextResponse.next({ request: { headers: reqHeaders } })
+  const res = NextResponse.next()
 
   res.headers.set('Content-Security-Policy', csp)
   res.headers.set('X-Content-Type-Options', 'nosniff')

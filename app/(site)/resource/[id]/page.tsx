@@ -1,27 +1,25 @@
 import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
-import { cookies } from 'next/headers'
 import ResourceDetailClient from './ResourceDetailClient'
 import { getCachedLatestResources, getCachedHotTags, getCachedGuessResources } from '@/lib/cache'
-import jwt from 'jsonwebtoken'
+import { getSiteUrl, absoluteUrl, buildMetaDescription } from '@/lib/seo'
 
-export const revalidate = 0 // Disable cache for dynamic auth check or use logic below
-// Note: If we use cookies, we opt out of full static generation for this route segment, 
-// but since it's a dynamic [id] route, it's usually dynamic anyway. 
-// However, 'revalidate' export forces ISR. 
-// We should probably keep ISR for the public content but check auth dynamically.
-// Actually, for authenticated content in ISR pages, we usually rely on client-side fetching.
-// But since the user wants it to work "on click" without waiting, and SSR is better.
-// Let's remove revalidate to make it dynamic, OR keep it and accept we need to access DB.
-// Given the requirement, I'll switch to dynamic rendering to support immediate download link availability.
-// Or better: keep ISR but add a "dynamic" hole? Next.js doesn't support that easily in App Router without "use client".
-// So I will remove `export const revalidate = 3600` and let it be dynamic by default due to cookies usage.
+// ISR：详情页正文对所有人一致，登录态与下载链接改由客户端调用鉴权接口获取，
+// 这样页面可以缓存（原来 revalidate = 0 + 服务端读 Cookie，导致该路由无法缓存）。
+export const revalidate = 3600
+
+// 声明本路由为「按需生成 + 缓存」：不预先渲染任何 id（避免上千条资源在构建期全量渲染），
+// 首次访问时生成并写入 ISR 缓存，之后直接命中缓存。
+export function generateStaticParams() {
+  return []
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const idNum = Number(id)
   if (isNaN(idNum)) return {}
 
+  const siteUrl = getSiteUrl()
   const resource = await prisma.resource.findUnique({
     where: { id: idNum },
     select: { title: true, content: true, cover: true, category: { select: { name: true, slug: true } }, subcategory: { select: { name: true, slug: true } }, tags: { include: { tag: true } } }
@@ -36,24 +34,36 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const highlights = cleanTitle.length > 30 ? cleanTitle.slice(0, 30) + '...' : cleanTitle
 
   const optimizedTitle = `${techKeywords}视频教程 - ${highlights} | 学好课`
-  const metaDescription = resource.content
-    ? resource.content.replace(/[#*`\[\]]/g, '').replace(/\n+/g, ' ').trim().slice(0, 160)
-    : `${mainTag}视频教程免费下载，涵盖${tagNames.join('、')}等核心技术点，适合${resource.category?.name || '编程'}学习者。`
+  const fallbackDesc = `${mainTag}视频教程免费下载，涵盖${tagNames.join('、')}等核心技术点，适合${resource.category?.name || '编程'}学习者。`
+  const metaDescription = buildMetaDescription(resource.content, fallbackDesc)
+  const canonical = `${siteUrl}/resource/${idNum}`
+  const image = resource.cover ? absoluteUrl(resource.cover) : undefined
 
   return {
     title: optimizedTitle,
     description: metaDescription,
+    keywords: [resource.title, ...tagNames.slice(0, 3), resource.category?.name, resource.subcategory?.name].filter(Boolean) as string[],
+    alternates: { canonical },
+    robots: { index: true, follow: true },
     openGraph: {
       title: optimizedTitle,
       description: metaDescription,
-      images: resource.cover ? [resource.cover] : [],
-    }
+      url: canonical,
+      type: 'article',
+      locale: 'zh_CN',
+      images: image ? [image] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: optimizedTitle,
+      description: metaDescription,
+      images: image ? [image] : [],
+    },
   }
 }
 
 export default async function ResourceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const resourceId = id
   const idNum = Number(id)
 
   if (isNaN(idNum)) return notFound()
@@ -99,44 +109,11 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
     category: '推荐资源', // Simplified
   }))
 
-  // 4.5 Check authorization
-  let downloadUrl = ''
-  let downloadCode = ''
-  let authorized = false
-
-  try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('site_token')?.value
-    if (token) {
-      const secret = process.env.SITE_JWT_SECRET || 'site_dev_secret_change_me'
-      const payload = jwt.verify(token, secret) as any
-      const userId = Number(payload?.uid)
-      if (userId) {
-        const [access, user] = await Promise.all([
-          prisma.userResourceAccess.findUnique({ where: { userId_resourceId: { userId, resourceId: idNum } } }),
-          prisma.user.findUnique({ where: { id: userId }, select: { isVip: true, vipExpireAt: true } })
-        ])
-        const now = new Date()
-        const isVip = !!user?.isVip && (!!user?.vipExpireAt ? (new Date(user.vipExpireAt) > now) : true)
-        
-        if (isVip || access) {
-          authorized = true
-          // Fetch download link
-          const resourceWithDownload = await prisma.resource.findUnique({
-            where: { id: idNum },
-            include: { downloads: true }
-          })
-          const download = resourceWithDownload?.downloads?.[0]
-          if (download) {
-            downloadUrl = download.url
-            downloadCode = download.code || ''
-          }
-        }
-      }
-    }
-  } catch (e) {
-    // Ignore auth errors, treat as unauthorized
-  }
+  // 4.5 鉴权与下载链接：改由客户端调用 /api/resources/access 获取，
+  // 服务端不再读 Cookie，从而让本页可以走 ISR 缓存。
+  const downloadUrl = ''
+  const downloadCode = ''
+  const authorized = false
 
   // 5. Transform resource data for client
   const resource = {
@@ -162,12 +139,11 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
     authorized,
   }
 
-  // 6. Log view count (server side effect)
-  // We can't easily execute async side effect without delaying response,
-  // better to let client trigger view count or use a fire-and-forget mechanism if possible.
-  // For now we skip server-side view counting or rely on client.
-
-  // 7. Generate Course Schema for Rich Snippets
+  // 6. 生成结构化数据：只保留 Course + FAQ + Breadcrumb。
+  //    已删除原来伪造的 AggregateRating（用 downloadCount 冒充评分/评价数，
+  //    违反 Google 结构化数据政策，有被人工处罚的风险）。
+  const siteUrl = getSiteUrl()
+  const resourceUrl = `${siteUrl}/resource/${resourceRaw.id}`
   const priceValue = Number(resourceRaw.price) > 0 ? Number(resourceRaw.price).toFixed(2) : "0"
   const courseSchema = {
     "@context": "https://schema.org",
@@ -176,22 +152,18 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
     "description": resourceRaw.content
       ? resourceRaw.content.replace(/[#*`\[\]]/g, '').replace(/\n+/g, ' ').trim().slice(0, 500)
       : `${resourceRaw.title} 视频教程`,
-    "url": `https://www.xuehaoke.top/resource/${resourceRaw.id}`,
-    "image": resourceRaw.cover || undefined,
+    "url": resourceUrl,
+    "image": resourceRaw.cover ? absoluteUrl(resourceRaw.cover) : undefined,
     "provider": {
       "@type": "Organization",
       "name": "学好课",
-      "url": "https://www.xuehaoke.top"
+      "url": siteUrl
     },
-    "aggregateRating": resourceRaw.downloadCount > 10 ? {
-      "@type": "AggregateRating",
-      "ratingValue": "4.5",
-      "ratingCount": resourceRaw.downloadCount.toString()
-    } : undefined,
     "offers": {
       "@type": "Offer",
       "price": priceValue,
       "priceCurrency": "CNY",
+      "url": resourceUrl,
       "availability": Number(resourceRaw.price) > 0
         ? "https://schema.org/PreOrder"
         : "https://schema.org/InStock"
@@ -201,6 +173,26 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
       "name": resourceRaw.category?.name || "编程课程",
       "description": resourceRaw.subcategory?.name || `${resourceRaw.tags.map((t: any) => t.tag.name).join('、')}相关课程`
     }
+  }
+
+  // 7. 面包屑结构化数据，与页面顶部的 HTML 面包屑保持一致
+  const breadcrumbItems: { name: string; url: string }[] = [{ name: '首页', url: `${siteUrl}/` }]
+  if (resourceRaw.category?.slug) {
+    breadcrumbItems.push({ name: resourceRaw.category.name, url: `${siteUrl}/category/${resourceRaw.category.slug}` })
+    if (resourceRaw.subcategory?.slug) {
+      breadcrumbItems.push({ name: resourceRaw.subcategory.name, url: `${siteUrl}/category/${resourceRaw.category.slug}/${resourceRaw.subcategory.slug}` })
+    }
+  }
+  breadcrumbItems.push({ name: resourceRaw.title, url: resourceUrl })
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": breadcrumbItems.map((it, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "name": it.name,
+      "item": it.url,
+    })),
   }
 
   // 8. Generate FAQ Schema for AI SEO
@@ -256,6 +248,10 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <ResourceDetailClient
         resource={resource}

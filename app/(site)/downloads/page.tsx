@@ -95,7 +95,7 @@ export default function DownloadsPage() {
           <div className="relative w-full h-40 md:h-52 overflow-hidden card">
             <Image
               src={siteConfig?.heroImage || "/haike_hero.svg"}
-              alt="Downloads Hero"
+              alt="我的下载记录页横幅"
               fill
               className="object-cover"
               priority

@@ -130,7 +130,7 @@ export default function TagDetailClient({
           <div className="relative w-full h-48 md:h-64 overflow-hidden card">
             <Image
               src={initialSiteConfig?.heroImage || "/haike_hero.svg"}
-              alt="Tag Hero"
+              alt={`${initialTagName} 标签资源列表横幅`}
               fill
               sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover"

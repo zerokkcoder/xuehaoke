@@ -4,6 +4,11 @@ import CategoryDetailClient from './CategoryDetailClient'
 
 export const revalidate = 3600 // ISR cache for 1 hour
 
+// 声明为「按需生成 + ISR 缓存」：仅在首次访问时渲染并缓存，之后命中缓存
+export function generateStaticParams() {
+  return []
+}
+
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const categorySlug = decodeURIComponent(slug)

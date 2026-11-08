@@ -1,23 +1,17 @@
 import { MetadataRoute } from 'next'
 import prisma from '@/lib/prisma'
+import { getSiteUrl } from '@/lib/seo'
 
 // 缓存 sitemap 1 小时，避免每次爬取都全量查询分类/标签/资源
 export const revalidate = 3600
 
-// 规范化 URL：移除 trailing slash，确保格式一致
-function normalizeUrl(url: string): string {
-  return url.replace(/\/$/, '')
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // 统一使用 https://www.xuehaoke.top，避免 www/非www 重复
-  let baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.xuehaoke.top'
-  if (!baseUrl.includes('www.') && !baseUrl.includes('localhost')) {
-    baseUrl = baseUrl.replace('https://', 'https://www.')
-  }
-  baseUrl = normalizeUrl(baseUrl)
+  // 统一域名（生产环境强制 https + www），避免 www/非 www 重复
+  const baseUrl = getSiteUrl()
 
   // Static routes
+  // 注意：这里不再输出 lastModified。原来是 new Date()，每次生成都会变，
+  // 属于「假更新」，搜索引擎会因此降低对本站 lastmod 的信任度，不如不写。
   const routes = [
     '',
     '/about',
@@ -25,7 +19,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/privacy-policy',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
-    lastModified: new Date(),
     changeFrequency: 'daily' as const,
     priority: 1,
   }))

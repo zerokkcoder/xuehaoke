@@ -188,7 +188,7 @@ export default function HomeClient({
             <div className="relative w-full h-64 md:h-72 overflow-hidden card">
               <Image
                 src={initialSiteConfig?.heroImage || "/haike_hero.svg"}
-                alt="Hero"
+                alt={`${initialSiteConfig?.siteName || '学好课'} ${initialSiteConfig?.siteSlogan || '专业资源下载平台'} 首页横幅`}
                 fill
                 sizes="(max-width: 768px) 100vw, 100vw"
                 className="object-cover"
@@ -235,7 +235,7 @@ export default function HomeClient({
           <div className="relative w-full h-40 md:h-48 overflow-hidden card">
             <Image
               src={initialSiteConfig?.heroImage || "/haike_hero.svg"}
-              alt="Search Header"
+              alt="学好课资源搜索页横幅"
               fill
               sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover"

@@ -129,7 +129,7 @@ export default function SubcategoryDetailClient({
           <div className="relative w-full h-48 md:h-64 overflow-hidden card">
             <Image
               src={initialSiteConfig?.heroImage || "/haike_hero.svg"}
-              alt="Subcategory Hero"
+              alt={`${initialSubcategoryName} 子分类资源列表横幅`}
               fill
               className="object-cover"
               priority

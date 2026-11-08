@@ -109,7 +109,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 link">
-            <Image src={siteConfig?.siteLogo || '/logo.png'} alt="logo" width={28} height={28} className="object-contain" priority unoptimized />
+            <Image src={siteConfig?.siteLogo || '/logo.png'} alt={`${siteConfig?.siteName || '学好课'} 站点标志`} width={28} height={28} className="object-contain" priority unoptimized />
             <span className="text-lg font-semibold">{siteConfig?.siteName || '学好课'}</span>
           </Link>
 
@@ -198,7 +198,7 @@ export default function Header({ currentUser, initialCategories = [], initialSit
                   {(mounted ? siteUser : currentUser)?.avatarUrl ? (
                     <Image 
                     src={(mounted ? siteUser : currentUser)!.avatarUrl as string} 
-                    alt="avatar" 
+                    alt={`${(mounted ? siteUser : currentUser)?.username || '用户'}的头像`} 
                     width={24} 
                     height={24} 
                     className="rounded-full object-cover" 
