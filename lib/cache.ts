@@ -82,6 +82,7 @@ export async function getCachedSiteSettings() {
     heroImage: r.hero_image,
     footerText: r.footer_text,
     siteSubtitle: r.site_subtitle,
+    adsenseCode: r.adsense_code,
   } : {}
 
   await redis.set(KEY_SITE_SETTINGS, JSON.stringify(data), 'EX', CACHE_TTL)

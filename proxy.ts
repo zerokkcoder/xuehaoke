@@ -32,14 +32,35 @@ export default async function middleware(req: NextRequest) {
   // 说明：这里不再使用 per-request nonce。nonce 会强制 Next 对每个请求重新渲染 HTML
   // （nonce 必须与 HTML 内联脚本一致，无法缓存），导致全站 Cache-Control: no-store、
   // TTFB 偏高、爬虫抓取效率下降。改用 'unsafe-inline' 后页面可以走 ISR / 全量缓存。
-  // 同时收紧掉原先的 https: 通配脚本源（站内没有任何外部脚本依赖）。
+  // AdSense 需要显式放行 googlesyndication 系列域名（script/frame），
+  // 这里按 Google 官方 CSP 说明放行具体域名，而不是放开 https: 通配。
   const csp = [
     "default-src 'self'",
     "img-src 'self' https: data: blob:",
     "font-src 'self' https: data:",
-    "script-src 'self' 'unsafe-inline'",
+    [
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "https://pagead2.googlesyndication.com",
+      "https://partner.googleadservices.com",
+      "https://www.googletagservices.com",
+      "https://tpc.googlesyndication.com",
+      "https://securepubads.g.doubleclick.net",
+      "https://adservice.google.com",
+      "https://www.google.com",
+      "https://www.gstatic.com",
+      "https://ep1.adtrafficquality.google",
+      "https://ep2.adtrafficquality.google",
+    ].join(' '),
     "style-src 'self' 'unsafe-inline' https:",
     "connect-src 'self' https:",
+    [
+      "frame-src 'self'",
+      "https://googleads.g.doubleclick.net",
+      "https://tpc.googlesyndication.com",
+      "https://www.google.com",
+      "https://www.gstatic.com",
+      "https://ep2.adtrafficquality.google",
+    ].join(' '),
     "frame-ancestors 'self'",
     "base-uri 'self'",
     'upgrade-insecure-requests',

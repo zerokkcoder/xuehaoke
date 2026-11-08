@@ -63,6 +63,18 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+/**
+ * 从后台「Google AdSense 脚本」里提取所有 <script src="...">，
+ * 兼容只填一个裸 URL 的写法。返回空数组即代表未开启。
+ */
+function extractScriptSrcs(code?: string | null): string[] {
+  const raw = (code || '').trim()
+  if (!raw) return []
+  const srcs = Array.from(raw.matchAll(/<script[^>]*\bsrc=["']([^"']+)["']/gi)).map((m) => m[1].trim())
+  const list = srcs.length ? srcs : (/^https?:\/\//i.test(raw) ? [raw] : [])
+  return Array.from(new Set(list.filter((u) => /^https?:\/\//i.test(u))))
+}
+
 export default async function SiteLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   let initialCategories: { id: number; name: string; slug?: string | null; subcategories: { id: number; name: string; slug?: string | null }[] }[] = []
   try {
@@ -70,18 +82,27 @@ export default async function SiteLayout({ children }: Readonly<{ children: Reac
     initialCategories = cats.map((c: any) => ({ id: c.id, name: c.name, slug: (c as any).slug || null, subcategories: (c.subcategories || []).map((s: any) => ({ id: s.id, name: s.name, slug: (s as any).slug || null })) }))
   } catch {}
   let initialSiteConfig: { siteName?: string | null; siteLogo?: string | null } | null = null
+  let adScriptSrcs: string[] = []
   try {
     const sr = await getCachedSiteSettings()
     initialSiteConfig = sr ? { siteName: sr.siteName || null, siteLogo: sr.siteLogo || null } : null
+    // 后台填了脚本就加载，没填（空）就不输出任何标签
+    adScriptSrcs = extractScriptSrcs(sr?.adsenseCode)
   } catch {}
 
   return (
-    <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
-      <Header initialCategories={initialCategories} initialSiteConfig={initialSiteConfig} />
-      <main className="flex-1">{children}</main>
-      <FloatingActions />
-      <Footer />
-      <UnpaidOrderReminder />
-    </div>
+    <>
+      {/* Google AdSense 等第三方脚本：由后台「站点设置」控制，只挂载在公开站点，不进入 /admin 后台 */}
+      {adScriptSrcs.map((src) => (
+        <script key={src} async src={src} crossOrigin="anonymous" />
+      ))}
+      <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
+        <Header initialCategories={initialCategories} initialSiteConfig={initialSiteConfig} />
+        <main className="flex-1">{children}</main>
+        <FloatingActions />
+        <Footer />
+        <UnpaidOrderReminder />
+      </div>
+    </>
   )
 }

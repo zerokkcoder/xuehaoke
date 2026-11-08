@@ -39,6 +39,7 @@ export async function GET(req: Request) {
     heroImage: r.hero_image ?? null,
     footerText: r.footer_text ?? null,
     siteSubtitle: r.site_subtitle ?? null,
+    adsenseCode: r.adsense_code ?? null,
   }
   return NextResponse.json({ success: true, data })
 }
@@ -64,6 +65,7 @@ export async function PUT(req: Request) {
   if (body.heroImage != null) displayData.hero_image = String(body.heroImage)
   if (body.footerText != null) displayData.footer_text = String(body.footerText)
   if (body.siteSubtitle != null) displayData.site_subtitle = String(body.siteSubtitle)
+  if (body.adsenseCode != null) displayData.adsense_code = String(body.adsenseCode)
 
   try {
     const rows: any[] = await prisma.$queryRawUnsafe('SELECT id, alipay_public_key FROM site_settings LIMIT 1')

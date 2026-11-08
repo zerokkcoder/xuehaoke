@@ -17,6 +17,7 @@ type Settings = {
   siteDescription?: string | null
   heroImage?: string | null
   footerText?: string | null
+  adsenseCode?: string | null
 }
 
 export default function AdminSettingsPage() {
@@ -214,6 +215,15 @@ export default function AdminSettingsPage() {
             <div>
               <label className="block text-sm text-muted-foreground mb-1">Footer 文本</label>
               <textarea name="footerText" value={settings?.footerText || ''} onChange={handleChange} rows={2} className="input w-full h-auto" placeholder="页脚显示的版权或标语" />
+            </div>
+          </fieldset>
+
+          <fieldset className="space-y-2">
+            <legend className="text-lg font-medium text-foreground">广告 / 第三方脚本</legend>
+            <div>
+              <label className="block text-sm text-muted-foreground mb-1">Google AdSense 脚本</label>
+              <textarea name="adsenseCode" value={settings?.adsenseCode || ''} onChange={handleChange} rows={3} className="input w-full h-auto" placeholder='粘贴 AdSense 代码，如：<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxx" crossorigin="anonymous"></script>；留空表示不开启' />
+              <p className="text-xs text-muted-foreground mt-1">填入即开启（前台公开页面自动加载），留空即关闭。可粘贴完整 &lt;script&gt; 代码或直接填脚本 URL。</p>
             </div>
           </fieldset>
 
