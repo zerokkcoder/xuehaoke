@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { extractAdsenseClientId } from '@/lib/adsense'
 
 type Settings = {
   id?: number
@@ -109,7 +110,8 @@ export default function AdminSettingsPage() {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        // AdSense 只提交发布商 ID：请求体里出现 <script> 会被服务器 WAF 当成 XSS 拦截（403）
+        body: JSON.stringify({ ...settings, adsenseCode: extractAdsenseClientId(settings.adsenseCode) }),
       })
       const json = await res.json().catch(() => ({}))
       if (res.ok && json?.success) {
@@ -219,11 +221,11 @@ export default function AdminSettingsPage() {
           </fieldset>
 
           <fieldset className="space-y-2">
-            <legend className="text-lg font-medium text-foreground">广告 / 第三方脚本</legend>
+            <legend className="text-lg font-medium text-foreground">广告</legend>
             <div>
-              <label className="block text-sm text-muted-foreground mb-1">Google AdSense 脚本</label>
-              <textarea name="adsenseCode" value={settings?.adsenseCode || ''} onChange={handleChange} rows={3} className="input w-full h-auto" placeholder='粘贴 AdSense 代码，如：<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxx" crossorigin="anonymous"></script>；留空表示不开启' />
-              <p className="text-xs text-muted-foreground mt-1">填入即开启（前台公开页面自动加载），留空即关闭。可粘贴完整 &lt;script&gt; 代码或直接填脚本 URL。</p>
+              <label className="block text-sm text-muted-foreground mb-1">Google AdSense 发布商 ID</label>
+              <textarea name="adsenseCode" value={settings?.adsenseCode || ''} onChange={handleChange} rows={2} className="input w-full h-auto" placeholder="ca-pub-6087964609661997" />
+              <p className="text-xs text-muted-foreground mt-1">留空表示不开启。可直接填发布商 ID，也可以粘贴 AdSense 提供的完整脚本代码或脚本 URL，保存时会自动提取 ID（请求体里不能出现 &lt;script&gt;，否则会被服务器防火墙拦截）。</p>
             </div>
           </fieldset>
 
